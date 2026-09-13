@@ -1,6 +1,6 @@
 {
-  "name": "chole_bhature-metasorter-addon",
-  "version": "4.3.0",
+  "name": "chole-bhature-metasorter",
+  "version": "4.4.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -18,5 +18,13 @@
     "express": "^5.2.1",
     "node-fetch": "^2.7.0",
     "stremio-addon-sdk": "^1.6.10"
+  },
+  "overrides": {
+    "stremio-addon-sdk": {
+      "path-to-regexp": "^0.1.13"
+    },
+    "qs": "^6.16.0",
+    "tmp": "^0.2.7",
+    "undici": "^7.29.1"
   }
 }

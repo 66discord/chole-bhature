@@ -17,7 +17,7 @@
     <link rel="apple-touch-icon" sizes="182x182" href="/icon-192.png?v=4">
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png?v=4">
     <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png?v=4">
-    <title>Chole Bhature • Nuvio & Stremio Meta-Sorter v4.3.0</title>
+    <title>Chole Bhature • Nuvio & Stremio Meta-Sorter v4.4.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1816,15 +1816,15 @@
         }
 
         .btn-submit-action {
-            background: #ffffff;
-            color: #000000;
-            border: none;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.18);
             padding: 0 20px;
             border-radius: var(--radius-input);
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             white-space: nowrap;
             flex-shrink: 0;
             display: inline-flex;
@@ -1833,11 +1833,18 @@
             gap: 6px;
             min-height: 44px;
             box-sizing: border-box;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.32);
         }
 
         .btn-submit-action:hover {
-            background: #f1f5f9;
-            transform: scale(1.02);
+            background: linear-gradient(135deg, #9333ea 0%, #4f46e5 100%);
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 6px 22px rgba(139, 92, 246, 0.48);
+            color: #ffffff;
+        }
+
+        .btn-submit-action:active {
+            transform: scale(0.98);
         }
 
         @media (max-width: 540px) {
@@ -2582,7 +2589,7 @@
         <a href="#" class="nav-brand-pill" onclick="handleSecretLogoClick(event); return false;">
             <img src="/icon-192.png?v=4" alt="Chole Bhature Logo" class="nav-brand-logo" onerror="this.onerror=null; this.src='/icon-192.png';">
             <span class="nav-brand-name">Chole Bhature</span>
-            <span class="nav-brand-version">v4.3.0</span>
+            <span class="nav-brand-version">v4.4.0</span>
         </a>
 
         <!-- Desktop Navigation Tabs -->
@@ -2782,12 +2789,15 @@
                         Created with ❤️ by <strong style="color: var(--text-primary);">SA7ANI</strong>. Licensed under GNU AGPL-3.0.
                     </p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto;">
-                        <a href="https://github.com/SA7ANI/chole-bhature" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="flex: 1; min-width: 130px; justify-content: center; font-size: 12px; text-decoration: none; padding: 10px 14px;">
+                        <a href="https://github.com/SA7ANI/chole-bhature" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="flex: 1; min-width: 120px; justify-content: center; font-size: 12px; text-decoration: none; padding: 10px 12px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                             GitHub Repo
                         </a>
-                        <a href="https://nuvioplugin.com/" target="_blank" rel="noopener noreferrer" class="btn-nuvio" style="flex: 1; min-width: 140px; justify-content: center; font-size: 12px; margin-top: 0; padding: 10px 14px;">
+                        <a href="https://nuvioplugin.com/" target="_blank" rel="noopener noreferrer" class="btn-nuvio" style="flex: 1; min-width: 120px; justify-content: center; font-size: 12px; margin-top: 0; padding: 10px 12px;">
                             ✨ Nuvio Plugins
+                        </a>
+                        <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="flex: 1; min-width: 120px; justify-content: center; font-size: 12px; text-decoration: none; padding: 10px 12px; border-color: rgba(14, 165, 233, 0.35); color: #38bdf8;">
+                            🎬 PencariMovie Server
                         </a>
                     </div>
                 </div>
@@ -2846,6 +2856,66 @@
                             <div id="debrid-input-container" style="width: 100%; display: none; position: relative;">
                                 <input type="password" id="debridApiKey" placeholder="Enter your Debrid API Key / Token..." onchange="onSettingChanged()" style="width: 100%; padding-right: 44px; box-sizing: border-box;">
                                 <button type="button" onclick="toggleApiKeyVisibility()" id="btn-peek-key" title="Toggle visibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 16px; cursor: pointer; opacity: 0.75; padding: 4px; display: flex; align-items: center; justify-content: center;">👁️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telegram Bot & Cloud Streaming -->
+            <div class="section-wrap" id="section-telegram">
+                <div class="section-label-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <span class="section-label">⚡ Telegram Cloud Streaming</span>
+                    <label class="filter-capsule" style="padding: 5px 12px; margin-left: auto; display: inline-flex; align-items: center; gap: 8px; margin: 0;">
+                        <span class="filter-capsule-text" style="font-size: 12px; font-weight: 700;">Telegram CDN</span>
+                        <div class="switch-toggle" style="margin: 0;">
+                            <input type="checkbox" id="enableTelegram" onchange="onSettingChanged(); toggleTelegramSubsections();">
+                            <span class="switch-slider"></span>
+                        </div>
+                    </label>
+                </div>
+                <div class="section-card" id="telegram-card-body" style="display: none;">
+                    <div class="setting-item-row" style="flex-direction: column; align-items: stretch; gap: 14px; padding-top: 0;">
+                        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                            <div class="setting-text-block" style="flex: 1; min-width: 240px;">
+                                <div class="setting-headline">
+                                    🚀 Direct Telegram CDN Streams
+                                    <span class="tag-pill-badge" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.4); color: #38bdf8;">⚡ No Debrid Needed</span>
+                                    <span class="tag-pill-badge" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399;">100% Free</span>
+                                </div>
+                                <div class="setting-description">
+                                    Streams movies and episodes directly from high-speed Telegram channels. Massive library of Bollywood, Regional Indian, Anime, and Dual-Audio releases with zero torrent seeders required.
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <button type="button" class="pill-btn pill-btn-glass" onclick="showTelegramTutorialModal()" style="font-size: 11.5px; padding: 7px 14px; font-weight: 700; color: #38bdf8; border-color: rgba(14, 165, 233, 0.35); background: rgba(14, 165, 233, 0.1); display: inline-flex; align-items: center; gap: 6px;">
+                                    <span>📖</span> Setup Guide
+                                </button>
+                                <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="font-size: 11.5px; padding: 7px 14px; text-decoration: none; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;" title="View PencariMovie Server on GitHub">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                    GitHub ↗
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Daemon URL input & test row -->
+                        <div class="input-bar-group" style="margin-top: 4px; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                <label style="font-size: 12px; font-weight: 700; color: #94a3b8;">Telegram Stream Bridge Daemon URL:</label>
+                                <span style="font-size: 11px; color: var(--text-tertiary);">Default: <code>http://127.0.0.1:8088</code></span>
+                            </div>
+                            <div style="display: flex; gap: 8px; width: 100%;">
+                                <input type="text" id="telegramBridgeUrl" placeholder="http://127.0.0.1:8088" value="http://127.0.0.1:8088" onchange="onSettingChanged()" style="flex: 1; font-family: monospace; font-size: 13px;">
+                                <button type="button" class="pill-btn pill-btn-emerald" id="btn-test-telegram" onclick="testTelegramBridge()" style="white-space: nowrap; padding: 0 18px; font-size: 12px; font-weight: 700; border-radius: 10px;">
+                                    <span>📡</span> Test Daemon
+                                </button>
+                            </div>
+                            <div id="telegram-bridge-status" style="font-size: 12px; display: none; padding: 8px 12px; border-radius: 8px;"></div>
+                            <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
+                                💡 <b>How it works:</b> Direct high-speed MTProto streaming via local daemon (<code>http://127.0.0.1:8088</code>), Termux Android service, or remote tunnel. If the daemon is offline, streams automatically play via web player fallback. Need help? Click <a href="#" onclick="showTelegramTutorialModal(); return false;" style="color: #38bdf8; text-decoration: underline;">Setup Guide</a>.
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; line-height: 1.5; display: flex; align-items: center; gap: 6px;">
+                                <span>🎬</span> Powered by <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline;">aiskendi/pencarimovie-server</a>
                             </div>
                         </div>
                     </div>
@@ -3345,12 +3415,12 @@
                         <label class="filter-capsule" style="padding: 5px 12px; margin-left: auto; display: inline-flex; align-items: center; gap: 8px;">
                             <span class="filter-capsule-text" style="font-size: 12px; font-weight: 700;">Curated Feed</span>
                             <div class="switch-toggle" style="margin: 0;">
-                                <input type="checkbox" id="enableCuratedIptv" checked onchange="onSettingChanged(); toggleCuratedChannelsVisibility();">
+                                <input type="checkbox" id="enableCuratedIptv" onchange="onSettingChanged(); toggleCuratedChannelsVisibility();">
                                 <span class="switch-slider"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="section-card">
+                    <div class="section-card" id="curated-iptv-card-body" style="display: none;">
                         <p class="setting-description" style="margin-bottom: 14px;">
                             Verified legal public live streams spanning <b>Sports</b> (Red Bull TV, Combat Sports), <b>World News</b> (BBC, Sky News, Bloomberg, France24, DW, Euronews), <b>Indian TV</b> (NDTV, Aaj Tak, DD Sports), <b>Movies</b> (Retro Classics, FilmRise), and <b>Music</b>.
                         </p>
@@ -3401,10 +3471,10 @@
                                     <input type="url" id="customIptvUrl" placeholder="https://example.com/playlist.m3u8" style="width: 100%; padding-left: 36px; padding-right: 32px;" onchange="onSettingChanged(); checkM3uInputChange();" oninput="checkM3uInputChange();">
                                     <button type="button" id="btn-clear-m3u-input" onclick="clearM3uInputOnly()" style="position: absolute; right: 8px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 4px 6px; display: none;" title="Clear Input">✕</button>
                                 </div>
-                                <button type="button" id="btn-test-m3u" class="btn-submit-action" onclick="testCustomM3u()" style="padding: 0 18px; height: 42px; white-space: nowrap; font-weight: 700;">
+                                <button type="button" id="btn-test-m3u" class="btn-submit-action" onclick="testCustomM3u()" style="padding: 0 18px; height: 42px; min-height: 42px; white-space: nowrap; font-weight: 700; border-radius: var(--radius-input);">
                                     <span>⚡</span> Test & Connect
                                 </button>
-                                <button type="button" class="pill-btn pill-btn-glass" onclick="toggleM3uAdvancedDrawer()" style="height: 42px; padding: 0 14px; white-space: nowrap; font-size: 12px;">
+                                <button type="button" class="pill-btn pill-btn-glass" onclick="toggleM3uAdvancedDrawer()" style="height: 42px; min-height: 42px; padding: 0 14px; white-space: nowrap; font-size: 12px; border-radius: var(--radius-input);">
                                     <span id="adv-drawer-icon">⚙️</span> Options
                                 </button>
                             </div>
@@ -4193,7 +4263,7 @@
         <!-- Persistent App Footer -->
         <footer class="app-footer">
             <div class="footer-content">
-                <span>🌶️ <strong>Chole Bhature</strong> v4.3.0</span>
+                <span>🌶️ <strong>Chole Bhature</strong> v4.4.0</span>
                 <span class="footer-dot">•</span>
                 <button type="button" class="footer-tour-btn" onclick="startInteractiveTour(true)" title="Start Interactive Step-by-Step Tour">
                     <span>💡</span> Interactive Guide
@@ -4368,6 +4438,118 @@
         </div>
     </div>
 
+    <!-- Telegram Streaming & Link Setup Tutorial Modal -->
+    <div id="cb-telegram-tutorial-modal" class="aesthetic-modal-backdrop" style="display: none; padding: 16px;">
+        <div class="aesthetic-modal-card" style="max-width: 560px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 22px;">
+            <!-- Modal Header -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="aesthetic-modal-icon-wrap" style="width: 40px; height: 40px; font-size: 20px; margin-bottom: 0; border-radius: 12px; background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: #38bdf8;">⚡</div>
+                    <div>
+                        <h3 class="aesthetic-modal-title" style="margin: 0; font-size: 17px; text-align: left; font-weight: 800; color: #f8fafc;">Telegram Cloud Streaming Guide</h3>
+                        <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">Powered by aiskendi/pencarimovie-server • Setup & Daemon Tutorial</span>
+                    </div>
+                </div>
+                <button type="button" class="tour-close-btn" onclick="closeTelegramTutorialModal()" title="Close">✕</button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div style="overflow-y: auto; overflow-x: hidden; padding-right: 4px; display: flex; flex-direction: column; gap: 14px; margin: 6px 0 12px 0;">
+                <!-- Credits & Thanks Card -->
+                <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.14) 0%, rgba(59, 130, 246, 0.08) 100%); border: 1px solid rgba(14, 165, 233, 0.35); border-radius: 12px; padding: 14px 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                            <span>🌟</span> Feature Origin: PencariMovie Server by @aiskendi
+                        </div>
+                        <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="font-size: 11px; padding: 4px 10px; text-decoration: none; color: #38bdf8; border-color: rgba(14, 165, 233, 0.35); background: rgba(14, 165, 233, 0.15); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            ⭐ Star on GitHub ↗
+                        </a>
+                    </div>
+                    <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.55;">
+                        This entire Telegram cloud streaming capability was adapted and integrated from the exceptional open-source project created by <b><a href="https://github.com/aiskendi" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">@aiskendi</a></b> — <b><a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">aiskendi/pencarimovie-server</a></b>. Special recognition and sincere thanks to <b>aiskendi</b> for architecting the Telegram MTProto cloud streaming engine, HTTP byte-range proxying, and media index!
+                    </div>
+                </div>
+
+                <!-- Section 1: Zero Setup Required (Web Player Fallback) -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 14px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #34d399; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>🟢</span> Option 1: Automatic Playback (No Setup Needed!)
+                    </div>
+                    <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.5;">
+                        If you do not have a local daemon running, <b>you don't need to do anything</b>. When you click any <code>⚡ Telegram</code> stream in Stremio or Nuvio, Chole Bhature's resolver automatically issues a secure redirect to the official <b>PencariMovie Web Player</b> (<code>https://pencarimovie.com/link/...</code>). The video will stream immediately in your browser or external player!
+                    </div>
+                </div>
+
+                <!-- Section 2: What is the Daemon Link & How to Get It -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 14px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>🚀</span> Option 2: High-Speed Direct In-App Streaming (With Daemon)
+                    </div>
+                    <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.5;">
+                        To play Telegram streams <b>directly inside the Stremio / Nuvio video player</b> with fast timeline seeking (<code>HTTP 206 Partial Content</code>), you can connect a local or remote MTProto streaming daemon.
+                    </div>
+
+                    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 11.5px; font-weight: 700; color: #e2e8f0;">Common Daemon URLs:</div>
+                        
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div>
+                                <div style="font-size: 12px; font-family: monospace; color: #38bdf8;">http://127.0.0.1:8088</div>
+                                <div style="font-size: 10px; color: #64748b;">Local PC / Mac / Linux (Default)</div>
+                            </div>
+                            <button type="button" class="pill-btn pill-btn-glass" onclick="setTelegramBridgeUrl('http://127.0.0.1:8088')" style="font-size: 10.5px; padding: 3px 8px;">Use This</button>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div>
+                                <div style="font-size: 12px; font-family: monospace; color: #38bdf8;">http://localhost:8088</div>
+                                <div style="font-size: 10px; color: #64748b;">Localhost Alias</div>
+                            </div>
+                            <button type="button" class="pill-btn pill-btn-glass" onclick="setTelegramBridgeUrl('http://localhost:8088')" style="font-size: 10.5px; padding: 3px 8px;">Use This</button>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div>
+                                <div style="font-size: 12px; font-family: monospace; color: #38bdf8;">http://&lt;your-lan-ip&gt;:8088</div>
+                                <div style="font-size: 10px; color: #64748b;">Android / Termux on Local Network (e.g. 192.168.1.100:8088)</div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div>
+                                <div style="font-size: 12px; font-family: monospace; color: #38bdf8;">https://&lt;your-tunnel-url&gt;</div>
+                                <div style="font-size: 10px; color: #64748b;">Cloudflare Tunnel / VPS / Tailscale</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: How to Run the MTProto Bridge Daemon -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 14px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #fbbf24; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <span>🛠️</span> How to Run the MTProto Streaming Daemon
+                    </div>
+                    <ol style="margin: 0; padding-left: 20px; font-size: 11.5px; color: #94a3b8; line-height: 1.6;">
+                        <li><b>Clone or Download:</b> Visit <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline;">github.com/aiskendi/pencarimovie-server</a> and follow the 1-minute quick install guide.</li>
+                        <li><b>On PC / Mac / Linux:</b> Run the PencariMovie server daemon listening on port <code>8088</code>.</li>
+                        <li><b>On Android:</b> Run the daemon in <b>Termux</b> with PHP/Python, allowing your phone or Android TV to serve direct high-speed streams locally.</li>
+                        <li><b>Test Connection:</b> Click the <b>📡 Test Daemon</b> button in the Settings tab to verify that Chole Bhature can reach your bridge.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="aesthetic-modal-actions" style="margin-top: 4px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+                <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="font-size: 11.5px; text-decoration: none; padding: 8px 14px; color: #38bdf8;">
+                    GitHub Repo ↗
+                </a>
+                <button type="button" class="pill-btn pill-btn-emerald" onclick="closeTelegramTutorialModal()" style="font-size: 12px; padding: 8px 22px;">
+                    Got It!
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Bottom Pill Navigation Bar (Mobile / Tablet Only) -->
     <nav class="bottom-nav-bar">
         <a class="nav-item active" onclick="switchTab('tab-home', this)">
@@ -4445,13 +4627,15 @@
             dohProvider: 'cloudflare',
             debridProvider: 'none',
             debridApiKey: '',
+            enableTelegram: false,
+            telegramBridgeUrl: 'http://127.0.0.1:8088',
             enableCatalogs: true,
             catalogPopular: true,
             catalogTrending: true,
             catalogIndian: true,
             catalogAnime: true,
             enableIptv: true,
-            enableCuratedIptv: true,
+            enableCuratedIptv: false,
             preferredLanguages: [],
             disabledProviders: []
         };
@@ -5153,6 +5337,11 @@
             const xtreamPasswordEl = document.getElementById('xtreamPassword');
             if (xtreamPasswordEl) settings.xtreamPassword = xtreamPasswordEl.value.trim();
 
+            const enableTelegramEl = document.getElementById('enableTelegram');
+            if (enableTelegramEl) settings.enableTelegram = enableTelegramEl.checked;
+            const telegramBridgeUrlEl = document.getElementById('telegramBridgeUrl');
+            if (telegramBridgeUrlEl) settings.telegramBridgeUrl = telegramBridgeUrlEl.value.trim();
+
             settings.prioritizeQuality = (settings.sortBy === 'quality');
             settings.preferredLanguages = settings.preferredLanguages || [];
             settings.prioritizeHindi = settings.preferredLanguages.includes('Hindi');
@@ -5178,6 +5367,7 @@
                 if (settings.renderEcoMode === true || settings.vercelEcoMode === true) activeCount++;
                 if (settings.enableDoh !== false) activeCount++;
                 if (settings.enableCatalogs !== false) activeCount++;
+                if (Boolean(settings.enableTelegram)) activeCount++;
                 const langCount = (settings.preferredLanguages || []).length;
                 if (langCount > 0) activeCount += langCount;
 
@@ -5215,7 +5405,7 @@
                 catalogIndian: settings.catalogIndian !== false,
                 catalogAnime: settings.catalogAnime !== false,
                 enableIptv: settings.enableIptv !== false,
-                enableCuratedIptv: settings.enableCuratedIptv !== false,
+                enableCuratedIptv: Boolean(settings.enableCuratedIptv),
                 customIptvUrl: settings.customIptvUrl || '',
                 iptvUserAgent: settings.iptvUserAgent || '',
                 iptvEpgUrl: settings.iptvEpgUrl || '',
@@ -5223,6 +5413,8 @@
                 xtreamServer: settings.xtreamServer || '',
                 xtreamUser: settings.xtreamUser || '',
                 xtreamPassword: settings.xtreamPassword || '',
+                enableTelegram: Boolean(settings.enableTelegram),
+                telegramBridgeUrl: settings.telegramBridgeUrl || 'http://127.0.0.1:8088',
                 sortBy: settings.sortBy || 'speed',
                 sortMode: settings.sortBy || 'speed',
                 prioritizeQuality: settings.sortBy === 'quality',
@@ -6526,6 +6718,8 @@
             if (cfg.xtreamServer !== undefined) settings.xtreamServer = cfg.xtreamServer;
             if (cfg.xtreamUser !== undefined) settings.xtreamUser = cfg.xtreamUser;
             if (cfg.xtreamPassword !== undefined) settings.xtreamPassword = cfg.xtreamPassword;
+            if (cfg.enableTelegram !== undefined) settings.enableTelegram = Boolean(cfg.enableTelegram);
+            if (cfg.telegramBridgeUrl !== undefined) settings.telegramBridgeUrl = cfg.telegramBridgeUrl;
             
             localStorage.setItem('nuvio_settings', JSON.stringify(settings));
             
@@ -6556,8 +6750,12 @@
             setCheck('catalogIndian', settings.catalogIndian !== false);
             setCheck('catalogAnime', settings.catalogAnime !== false);
 
+            setCheck('enableTelegram', Boolean(settings.enableTelegram));
+            setVal('telegramBridgeUrl', settings.telegramBridgeUrl || 'http://127.0.0.1:8088');
+            toggleTelegramSubsections();
+
             setCheck('enableIptv', settings.enableIptv !== false);
-            setCheck('enableCuratedIptv', settings.enableCuratedIptv !== false);
+            setCheck('enableCuratedIptv', Boolean(settings.enableCuratedIptv));
             setVal('customIptvUrl', settings.customIptvUrl || '');
             setVal('iptvUserAgent', settings.iptvUserAgent || '');
             setVal('iptvEpgUrl', settings.iptvEpgUrl || '');
@@ -6567,6 +6765,7 @@
             setVal('xtreamPassword', settings.xtreamPassword || '');
 
             toggleIptvSubsections();
+            toggleCuratedChannelsVisibility();
             renderCuratedChannels();
 
             if (settings.customIptvUrl) {
@@ -8136,6 +8335,96 @@
             { id: 'iptv:curated:clubbing_tv', name: 'Clubbing TV', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Headphones_icon.svg/500px-Headphones_icon.svg.png', category: 'Music', country: 'France' }
         ];
 
+        // ===== TELEGRAM CLOUD STREAMING CONTROLLERS =====
+        function showTelegramTutorialModal() {
+            triggerHaptic('medium');
+            const modal = document.getElementById('cb-telegram-tutorial-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeTelegramTutorialModal() {
+            triggerHaptic('light');
+            const modal = document.getElementById('cb-telegram-tutorial-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function setTelegramBridgeUrl(url) {
+            triggerHaptic('light');
+            const input = document.getElementById('telegramBridgeUrl');
+            if (input) {
+                input.value = url;
+                settings.telegramBridgeUrl = url;
+                onSettingChanged();
+                showToast(`⚡ Bridge URL set to: <b>${url}</b>`);
+            }
+        }
+
+        function toggleTelegramSubsections() {
+            const isTg = Boolean(document.getElementById('enableTelegram')?.checked);
+            const body = document.getElementById('telegram-card-body');
+            if (body) body.style.display = isTg ? 'block' : 'none';
+        }
+
+        async function testTelegramBridge() {
+            triggerHaptic('medium');
+            const input = document.getElementById('telegramBridgeUrl');
+            const statusEl = document.getElementById('telegram-bridge-status');
+            const btn = document.getElementById('btn-test-telegram');
+            const bridgeUrl = input ? input.value.trim() : 'http://127.0.0.1:8088';
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span>⏳</span> Testing...';
+            }
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = 'rgba(14, 165, 233, 0.12)';
+                statusEl.style.border = '1px solid rgba(14, 165, 233, 0.3)';
+                statusEl.style.color = '#38bdf8';
+                statusEl.innerHTML = '⏳ <b>Pinging Telegram Bridge Daemon...</b>';
+            }
+
+            try {
+                const res = await fetch(`/api/telegram/status?bridgeUrl=${encodeURIComponent(bridgeUrl)}`);
+                const data = await res.json();
+                const isOnline = Boolean(data && (data.online || data.bridgeHealthy || data.success));
+                if (isOnline) {
+                    triggerHaptic('success');
+                    if (statusEl) {
+                        statusEl.style.background = 'rgba(16, 185, 129, 0.12)';
+                        statusEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                        statusEl.style.color = '#34d399';
+                        const ver = (data.versionData && data.versionData.current_version) ? ` (v${data.versionData.current_version})` : '';
+                        const lat = data.latencyMs ? ` • ${data.latencyMs}ms` : '';
+                        statusEl.innerHTML = `🟢 <b>Bridge Online${ver}${lat}:</b> High-speed MTProto direct streaming active at <code>${data.bridgeUrl || bridgeUrl}</code>.`;
+                    }
+                    showToast('⚡ <b>Telegram Bridge Online:</b> High-speed direct streaming ready.');
+                } else {
+                    triggerHaptic('warning');
+                    if (statusEl) {
+                        statusEl.style.background = 'rgba(245, 158, 11, 0.12)';
+                        statusEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+                        statusEl.style.color = '#fbbf24';
+                        const reason = (data && data.error) ? ` (${data.error})` : '';
+                        statusEl.innerHTML = `🟡 <b>Bridge Offline (Standby Mode):</b> Bridge at <code>${bridgeUrl}</code> was not reachable${reason}. Telegram streams will seamlessly stream via web player fallback.`;
+                    }
+                    showToast('ℹ️ <b>Bridge Offline:</b> Web player fallback active.');
+                }
+            } catch (e) {
+                if (statusEl) {
+                    statusEl.style.background = 'rgba(239, 68, 68, 0.12)';
+                    statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    statusEl.style.color = '#f87171';
+                    statusEl.innerHTML = `⚠️ <b>Error:</b> Could not connect to Telegram status API.`;
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>📡</span> Test Daemon';
+                }
+            }
+        }
+
         function toggleIptvSubsections() {
             const isIptv = document.getElementById('enableIptv')?.checked !== false;
             const sub = document.getElementById('iptv-subsections');
@@ -8143,7 +8432,9 @@
         }
 
         function toggleCuratedChannelsVisibility() {
-            const isCurated = document.getElementById('enableCuratedIptv')?.checked !== false;
+            const isCurated = Boolean(document.getElementById('enableCuratedIptv')?.checked);
+            const body = document.getElementById('curated-iptv-card-body');
+            if (body) body.style.display = isCurated ? 'block' : 'none';
             const grid = document.getElementById('curated-channels-grid');
             if (grid) grid.style.opacity = isCurated ? '1' : '0.4';
         }

@@ -477,8 +477,8 @@ async function fetchXtreamChannels(server, username, password) {
 async function getAllConfiguredChannels(config = {}) {
     let allChannels = [];
 
-    // 1. Curated Channels (Enabled by default unless disabled)
-    if (config.enableCuratedIptv !== false) {
+    // 1. Curated Channels (Disabled by default unless explicitly enabled)
+    if (Boolean(config.enableCuratedIptv)) {
         allChannels = allChannels.concat(CURATED_CHANNELS);
         for (const ch of CURATED_CHANNELS) {
             channelMetadataCache.set(ch.id, ch);

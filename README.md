@@ -5,7 +5,7 @@
   # Chole Bhature
   ### High-Performance Stream Meta-Sorter & Discovery Hub for Nuvio & Stremio
 
-  [![Version](https://img.shields.io/badge/version-4.3.0-indigo.svg?style=for-the-badge)](https://github.com/SA7ANI/chole-bhature)
+  [![Version](https://img.shields.io/badge/version-4.4.0-indigo.svg?style=for-the-badge)](https://github.com/SA7ANI/chole-bhature)
   [![Platform](https://img.shields.io/badge/Platform-Nuvio%20%7C%20Stremio-purple.svg?style=for-the-badge)](https://github.com/SA7ANI/chole-bhature)
   [![License](https://img.shields.io/badge/License-GNU%20AGPLv3-amber.svg?style=for-the-badge)](LICENSE)
   [![Author](https://img.shields.io/badge/Author-SA7ANI-blue.svg?style=for-the-badge)](https://github.com/SA7ANI)
@@ -31,6 +31,7 @@ Instead of waiting through buffering wheels or clicking dead links, Chole Bhatur
 | Feature | Description |
 | :--- | :--- |
 | ⚡ **Real-Time Latency Probing** | Concurrently tests HTTP/HLS streams via lightweight `Range`/`HEAD` probes. Dynamically tags links with `🟢 FAST (<800ms)`, `🟡 SLOW (≥800ms)`, or `🔴 DEAD`. |
+| ⚡ **Telegram Cloud Streaming** | Stream movies & TV episodes directly from Telegram channels via **PencariMovie** index without requiring Real-Debrid or torrent seeders. Supports HTTP `Range` requests and automatic web player fallback. |
 | 💎 **Debrid Premium Resolvers** | Add your Real-Debrid, AllDebrid, or Torbox API key to unrestrict cached torrents. Replaces magnets with high-speed direct CDN links tagged with `⚡ [RD+]`, `⚡ [AD+]`, or `⚡ [TB+]`. |
 | 📡 **Live TV & IPTV Playlist Studio** | Pro-grade IPTV player with 1-click curated public broadcasts, interactive Channel Explorer, live stream latency tester, custom M3U/M3U8 URLs, and Xtream Codes login. |
 | 📺 **Curated Discovery Feeds** | Native catalog feeds for **Popular Right Now**, **Trending Indian Cinema**, **Anime**, and **Live TV** (`News`, `Sports`, `Movies`, `Music`, `India`, `USA`, etc.) with sub-category filters in Stremio & Nuvio. |
@@ -87,6 +88,17 @@ Chole Bhature includes a complete IPTV subsystem:
 
 ---
 
+## ⚡ Telegram Cloud Streaming
+
+Chole Bhature includes native integration with Telegram cloud-hosted media indexing powered by **[PencariMovie Server](https://github.com/aiskendi/pencarimovie-server)**:
+* **100% Free & Debrid-Free**: Access direct cloud streams for thousands of movies and TV series without needing Real-Debrid, AllDebrid, or P2P torrent swarms.
+* **Intelligent Series & Episode Filtering**: Automatically identifies season and episode markers, filtering files precisely for requested episodes (e.g. `Loki S01E01`).
+* **Multi-Part Video Grouping**: Automatically recognizes split releases and tags them cleanly as `[Part 1/2]`, `[Part 2/2]`, etc.
+* **High-Speed MTProto Bridge**: Connects with a local or remote MTProto streaming bridge daemon (`http://127.0.0.1:8088`), proxying `HTTP 206 Partial Content` byte ranges for seamless player scrubbing and fast seeking.
+* **Graceful Web Fallback**: If no local bridge daemon is running, links gracefully redirect via `HTTP 302` to PencariMovie's public web player so streams never fail.
+
+---
+
 ## 🛠️ Diagnostics & Admin Dashboard
 
 Under the **Diagnostics & Admin** tab, you can monitor and manage your deployment:
@@ -105,6 +117,14 @@ Under the **Diagnostics & Admin** tab, you can monitor and manage your deploymen
 * **Scraper Engine:** Axios, Cheerio, Crypto-JS, Node-Fetch
 * **DNS Resolver:** DNS-over-HTTPS (DoH) via Axios with Native DNS fallback
 * **Frontend:** Vanilla HTML5, Modern CSS3 Glassmorphism, Offline PWA Service Worker
+
+---
+
+## 🙏 Credits & Acknowledgments
+
+* **[PencariMovie Server](https://github.com/aiskendi/pencarimovie-server)** by **[@aiskendi](https://github.com/aiskendi)**: Telegram cloud streaming architecture & media indexer.
+* **Nuvio & Stremio Community**: For the open-source media player ecosystems and community addon protocols.
+* **Eclipsia, Yoruix & D3adlyRocket**: For community provider definitions and scraper repositories.
 
 ---
 

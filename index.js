@@ -5,6 +5,8 @@ const providerLoader = require('./providerLoader');
 const { sortAndTagStreams, clearDomainLatencyCache } = require('./streamTester');
 const { setDohEnabled, setDohProvider, getDohConfig, dohHttpsAgent } = require('./dohResolver');
 const iptvManager = require('./iptvManager');
+const { searchPencariMovie } = require('./scrapers/pencarimovie');
+const telegramRouter = require('./routes/telegramStream');
 const axios = require('axios');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -1834,7 +1836,7 @@ function createAddon(config) {
 
     const builder = new addonBuilder({
         id: addonId,
-        version: '4.3.0',
+        version: '4.4.0',
         name: addonName,
         description: 'High-Performance Stream Meta-Sorter & Discovery Hub for Nuvio & Stremio. Scrapes, verifies, filters dead links, organizes streams by speed/quality/audio, and provides curated Live TV, Indian Cinema, Trending & Anime feeds.',
         logo: addonLogo,
@@ -1880,7 +1882,7 @@ function createAddon(config) {
             let season = null;
             let episode = null;
 
-            if (type === 'series') {
+            if (type === 'series' || type === 'tv' || type === 'anime' || (id && id.includes(':') && !id.startsWith('iptv:') && !id.startsWith('kitsu:'))) {
                 const parts = id.split(':');
                 imdbId = parts[0];
                 season = parts[1];
@@ -1931,6 +1933,7 @@ function createAddon(config) {
             }
 
             let allStreams = [];
+            const scrapeStartTime = Date.now();
             // High-speed parallel scraper execution timeout to ensure streams return within client limits
             // Universal Server-Wide Admin Enforcement: Admin switch strictly dictates Eco Mode for all users
             const isClientEco = config.renderEcoMode !== undefined ? config.renderEcoMode : config.vercelEcoMode;
@@ -1939,52 +1942,74 @@ function createAddon(config) {
                 : (globalServerSettings.allowClientEcoOverride ? Boolean(isClientEco !== false) : true);
             const PROVIDER_TIMEOUT_MS = isEcoMode || (typeof process !== 'undefined' && (process.env.RENDER || process.env.VERCEL)) ? 8000 : 15000;
 
-            const scrapeStartTime = Date.now();
-            await Promise.all(allProviders.map(async (provider) => {
-                try {
-                    if (config.enableQuarantine !== false) {
-                        const qRecord = quarantineRegistry.get(provider.name);
-                        if (qRecord && qRecord.quarantineUntil > Date.now()) {
-                            console.log(`[Quarantine] Skipping provider ${provider.name} (Quarantined)`);
-                            return;
+            const tgScrapePromise = (async () => {
+                if (Boolean(config.enableTelegram) && (!config.disabled || (!config.disabled.includes('Telegram') && !config.disabled.includes('Telegram (PencariMovie)')))) {
+                    try {
+                        const tgStreams = await searchPencariMovie({
+                            title: mediaMeta?.title || '',
+                            originalTitle: mediaMeta?.originalTitle || '',
+                            year: mediaMeta?.year || null,
+                            type: type,
+                            season: season,
+                            episode: episode
+                        }, config);
+                        if (Array.isArray(tgStreams) && tgStreams.length > 0) {
+                            allStreams = allStreams.concat(tgStreams);
                         }
+                    } catch (tgErr) {
+                        console.warn('[Telegram Scraper] Error fetching streams:', tgErr.message);
                     }
-
-                    let nuvioType = type;
-                    if (type === 'series' || type === 'tv') nuvioType = 'tv';
-                    else if (type === 'movie') nuvioType = 'movie';
-                    else if (type === 'anime') nuvioType = (season && episode) ? 'tv' : 'movie';
-                    
-                    const scrapePromise = provider.getStreams(tmdbId, nuvioType, season, episode, config);
-                    
-                    // Timeout promise
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Scrape Timeout')), PROVIDER_TIMEOUT_MS)
-                    );
-
-                    const streams = await Promise.race([scrapePromise, timeoutPromise]);
-                    
-                    if (config.enableQuarantine !== false) {
-                        quarantineRegistry.delete(provider.name);
-                    }
-                    
-                    if (Array.isArray(streams)) {
-                        streams.forEach(s => s.name = s.name || provider.name);
-                        allStreams = allStreams.concat(streams);
-                    }
-                } catch (err) {
-                    if (config.enableQuarantine !== false && err.message !== 'Scrape Timeout') {
-                        const qRecord = quarantineRegistry.get(provider.name) || { strikes: 0, quarantineUntil: 0 };
-                        qRecord.strikes++;
-                        if (qRecord.strikes >= 5) {
-                            qRecord.quarantineUntil = Date.now() + (10 * 60 * 1000); // 10 minutes
-                            console.error(`[Quarantine] ${provider.name} failed 5 times. Quarantined for 10m.`);
-                        }
-                        quarantineRegistry.set(provider.name, qRecord);
-                    }
-                    console.error(`[Provider] ${provider.name} failed or timed out:`, err.message);
                 }
-            }));
+            })();
+
+            await Promise.all([
+                ...allProviders.map(async (provider) => {
+                    try {
+                        if (config.enableQuarantine !== false) {
+                            const qRecord = quarantineRegistry.get(provider.name);
+                            if (qRecord && qRecord.quarantineUntil > Date.now()) {
+                                console.log(`[Quarantine] Skipping provider ${provider.name} (Quarantined)`);
+                                return;
+                            }
+                        }
+
+                        let nuvioType = type;
+                        if (type === 'series' || type === 'tv') nuvioType = 'tv';
+                        else if (type === 'movie') nuvioType = 'movie';
+                        else if (type === 'anime') nuvioType = (season && episode) ? 'tv' : 'movie';
+                        
+                        const scrapePromise = provider.getStreams(tmdbId, nuvioType, season, episode, config);
+                        
+                        // Timeout promise
+                        const timeoutPromise = new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Scrape Timeout')), PROVIDER_TIMEOUT_MS)
+                        );
+
+                        const streams = await Promise.race([scrapePromise, timeoutPromise]);
+                        
+                        if (config.enableQuarantine !== false) {
+                            quarantineRegistry.delete(provider.name);
+                        }
+                        
+                        if (Array.isArray(streams)) {
+                            streams.forEach(s => s.name = s.name || provider.name);
+                            allStreams = allStreams.concat(streams);
+                        }
+                    } catch (err) {
+                        if (config.enableQuarantine !== false && err.message !== 'Scrape Timeout') {
+                            const qRecord = quarantineRegistry.get(provider.name) || { strikes: 0, quarantineUntil: 0 };
+                            qRecord.strikes++;
+                            if (qRecord.strikes >= 5) {
+                                qRecord.quarantineUntil = Date.now() + (10 * 60 * 1000); // 10 minutes
+                                console.error(`[Quarantine] ${provider.name} failed 5 times. Quarantined for 10m.`);
+                            }
+                            quarantineRegistry.set(provider.name, qRecord);
+                        }
+                        console.error(`[Provider] ${provider.name} failed or timed out:`, err.message);
+                    }
+                }),
+                tgScrapePromise
+            ]);
             const scrapeDurationMs = Date.now() - scrapeStartTime;
 
             console.log(`[Stremio] Collected ${allStreams.length} total streams for ${type} ${id}. Testing speeds...`);
@@ -2075,6 +2100,9 @@ function createAddon(config) {
             const sortedAndTaggedStreams = await fetchPromise;
             const frStream = getForceRefreshStream();
             return { streams: frStream ? [frStream, ...sortedAndTaggedStreams] : sortedAndTaggedStreams };
+        } catch (streamErr) {
+            console.error(`[Stremio Stream Handler Error] for ${type} ${id}:`, streamErr.stack || streamErr.message);
+            return { streams: [] };
         } finally {
             inFlightStreamFetches.delete(cacheKey);
         }
@@ -2491,10 +2519,14 @@ app.get('/c/:configId/clear-cache/:type/:id', (req, res) => {
     handleClearCacheRequest(req, res, req.params.configId);
 });
 
+// Mount Telegram streaming routes & bridge API
+app.use('/stream/telegram', telegramRouter);
+app.use('/api/telegram', telegramRouter);
+
 // Dynamic configuration endpoints for Stremio Router (With Vercel Edge CDN Headers)
 app.use('/c/:configId', (req, res, next) => {
     // Only intercept Stremio API routes
-    if (req.path === '/manifest.json' || req.path.startsWith('/stream/') || req.path.startsWith('/catalog/') || req.path.startsWith('/meta/')) {
+    if (req.path === '/manifest.json' || (req.path.startsWith('/stream/') && !req.path.startsWith('/stream/telegram')) || req.path.startsWith('/catalog/') || req.path.startsWith('/meta/')) {
         try {
             if (req.path === '/manifest.json' || req.path.startsWith('/catalog/')) {
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -2526,7 +2558,7 @@ app.use('/c/:configId', (req, res, next) => {
 
 app.use('/:configJSON', (req, res, next) => {
     // Only intercept Stremio API routes
-    if (req.path === '/manifest.json' || req.path.startsWith('/stream/') || req.path.startsWith('/catalog/') || req.path.startsWith('/meta/')) {
+    if (req.path === '/manifest.json' || (req.path.startsWith('/stream/') && !req.path.startsWith('/stream/telegram')) || req.path.startsWith('/catalog/') || req.path.startsWith('/meta/')) {
         try {
             if (req.path === '/manifest.json' || req.path.startsWith('/catalog/')) {
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -2559,7 +2591,7 @@ app.use('/:configJSON', (req, res, next) => {
 
 // Mount default Stremio Addon router at root (for /manifest.json, /stream/..., /catalog/...)
 app.use((req, res, next) => {
-    if (req.path === '/manifest.json' || req.path.startsWith('/stream/') || req.path.startsWith('/catalog/') || req.path.startsWith('/meta/')) {
+    if (req.path === '/manifest.json' || (req.path.startsWith('/stream/') && !req.path.startsWith('/stream/telegram')) || req.path.startsWith('/catalog/') || req.path.startsWith('/meta/')) {
         try {
             if (req.path === '/manifest.json' || req.path.startsWith('/catalog/')) {
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -2583,7 +2615,7 @@ if (!process.env.VERCEL) {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`
 ========================================================================
-  🌶️  CHOLE BHATURE • Meta-Sorter & Priority Engine v4.3.0
+  🌶️  CHOLE BHATURE • Meta-Sorter & Priority Engine v4.4.0
   ⚡  Created by SA7ANI | https://github.com/SA7ANI/chole-bhature
   🛡️  Licensed under GNU AGPL-3.0 • Attribution Required
 ========================================================================

@@ -5,9 +5,17 @@
 
 function formatProviderChain(providers, fallback = 'Stream') {
     if (!providers || !Array.isArray(providers) || providers.length === 0) {
+        if (typeof fallback === 'string' && (fallback.includes('Telegram') || fallback.includes('PencariMovie'))) {
+            return '⚡ Telegram';
+        }
         return fallback;
     }
-    const cleanList = [...new Set(providers.filter(Boolean))];
+    const cleanList = [...new Set(providers.filter(Boolean))].map(p => {
+        if (typeof p === 'string' && (p.includes('Telegram') || p.includes('PencariMovie'))) {
+            return '⚡ Telegram';
+        }
+        return p;
+    });
     if (cleanList.length === 0) return fallback;
     if (cleanList.length === 1) return cleanList[0];
     if (cleanList.length === 2) return `${cleanList[0]} + ${cleanList[1]}`;

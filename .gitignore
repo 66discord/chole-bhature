@@ -6,3 +6,4 @@ admin_settings.json
 telemetry_metrics.json
 test_suite.js
 .secret
+scratch/

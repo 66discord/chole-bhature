@@ -1,5 +1,8 @@
 const axios = require('axios');
 const { dohHttpAgent, dohHttpsAgent } = require('./dohResolver');
+const { parseTorrentTitle, cleanReleaseNoise } = require('./torrentParser');
+const { ingestStream, normalizeInfoHash, parseSizeToBytes, formatBytesToSize, extractCleanProvider } = require('./streamIngest');
+const { formatStreamCard, formatProviderChain } = require('./streamFormatter');
 
 const TIMEOUT_MS = (typeof process !== 'undefined' && (process.env.RENDER || process.env.VERCEL)) ? 800 : 1200;
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
@@ -88,133 +91,19 @@ async function checkDebridAvailability(hashes, config = {}) {
 }
 
 function cleanProviderName(rawName) {
-    if (!rawName) return 'Stream';
-    let clean = String(rawName).split('\n')[0].replace(/[🟢🟡🔴🧲]/g, '').trim();
-    if (clean.includes('•')) {
-        const parts = clean.split('•');
-        clean = parts[parts.length - 1].trim();
-    }
-    if (clean.includes('|')) {
-        clean = clean.split('|')[0].trim();
-    }
-    return clean || 'Stream';
+    return extractCleanProvider(rawName);
 }
 
 function extractCleanTitleAndDetails(rawText, stream = null) {
-    if ((!rawText || typeof rawText !== 'string') && (!stream || !stream.behaviorHints?.filename)) {
-        return { cleanTitle: '', year: null, seasonEpisode: null, releaseGroup: null, dvProfile: null };
-    }
-
-    // Determine candidate strings: check behaviorHints.filename first, then evaluate lines
-    const candidates = [];
-    if (stream && stream.behaviorHints && typeof stream.behaviorHints.filename === 'string' && stream.behaviorHints.filename.trim()) {
-        candidates.push(stream.behaviorHints.filename.trim());
-    }
-
-    if (rawText && typeof rawText === 'string') {
-        const rawLines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-        for (const line of rawLines) {
-            // Exclude lines that are purely stats, emoji lines, or provider tags
-            if (/^(?:👤|💾|⚙️|🌱|⚡|📦|🔗|🏷️|🎬|💎|🌐|\d+\s*(?:GB|MB|GiB|MiB)|(?:fast|slow|dead)\s*\()/i.test(line)) continue;
-            if (/^\[?(?:rd\+|ad\+|tb\+|pm\+|p2p)\]?/i.test(line) && line.length < 30 && !/\b(?:19\d\d|20\d\d)\b/.test(line)) continue;
-            candidates.push(line);
-        }
-    }
-
-    if (candidates.length === 0) {
-        candidates.push((rawText || '').split('\n')[0].trim());
-    }
-
-    // Pick the best candidate line (prefers lines containing scene dots/underscores, year, resolution, or season episode)
-    let bestCandidate = candidates[0] || '';
-    let highestScore = -1;
-    for (const cand of candidates) {
-        let score = 0;
-        if (/\b(19\d\d|20[0-3]\d)\b/.test(cand)) score += 5;
-        if (/\b(S\d{1,2}(?:[\s._-]?E\d{1,3})?|\d{1,2}x\d{1,3})\b/i.test(cand)) score += 5;
-        if (/\b(?:2160p|1080p|720p|480p|4k|uhd|bluray|web-dl|webrip|remux|hevc|x265|x264)\b/i.test(cand)) score += 4;
-        if (/[\._]/.test(cand)) score += 2;
-        if (cand.length > 10) score += 1;
-        if (score > highestScore) {
-            highestScore = score;
-            bestCandidate = cand;
-        }
-    }
-
-    let text = bestCandidate;
-    // Strip file extensions (.mkv, .mp4, .avi, .ts, etc.)
-    text = text.replace(/\.(mkv|mp4|avi|mov|ts|m2ts|webm)$/i, '');
-
-    // 1. Extract Release Group at the end (e.g. -FraMeSToR, -FLUX, [PSA], -NTb, etc.)
-    let releaseGroup = null;
-    const groupMatch = text.match(/[-_]([A-Za-z0-9]+)$/) || text.match(/\[([A-Za-z0-9]+)\]$/);
-    if (groupMatch) {
-        const potentialGroup = groupMatch[1];
-        if (!/^(mkv|mp4|avi|2160p|1080p|720p|480p|hevc|x265|x264|aac|ac3|dvd|hd|uhd|web|dl|rip|ita|eng|fra|ger|spa|rus)$/i.test(potentialGroup)) {
-            releaseGroup = potentialGroup;
-        }
-    }
-
-    // 2. Extract DV Profile (e.g., Profile 5, Profile 7, Profile 8, P8, P5, P7)
-    let dvProfile = null;
-    const dvMatch = text.match(/\bprofile[\s._-]?([578])\b/i) || text.match(/\b(?:dv|dovi)[\s._-]?p?([578])\b/i);
-    if (dvMatch) {
-        dvProfile = `Profile ${dvMatch[1]}`;
-    }
-
-    // 3. Extract Season & Episode (e.g., S01E05, S01-S03, 1x04)
-    let seasonEpisode = null;
-    const seMatch = text.match(/\b(S\d{1,2}(?:[\s._-]?E\d{1,3}(?:-E\d{1,3})?|[\s._-]?S\d{1,2})?|\d{1,2}x\d{1,3})\b/i);
-    if (seMatch) {
-        seasonEpisode = seMatch[1].toUpperCase().replace(/[\s._-]+/g, '');
-    }
-
-    // 4. Extract 4-digit Year (1920-2035)
-    let year = null;
-    const yearMatch = text.match(/\b(19\d\d|20[0-3]\d)\b/);
-    if (yearMatch) {
-        year = yearMatch[1];
-    }
-
-    // 5. Tokenizer boundary regex: identify where scene metadata starts
-    const tokenRegex = /\b(?:2160p|1080p|720p|480p|4k|uhd|fhd|hd|bluray|blu-ray|bdrip|brrip|web-dl|webdl|webrip|web|hdtv|dvdrip|remux|imax|hdr|hdr10|hdr10\+|dv|dovi|dolby|atmos|truehd|ddp|dd\+|eac3|ac3|dts|flac|aac|hevc|h265|x265|h264|x264|av1|10bit|hindi|tamil|telugu|malayalam|kannada|english|japanese|multi|dual|subs?|complete|repack|proper)\b/i;
-    
-    let titlePortion = text;
-    if (year) {
-        const yearIdx = text.indexOf(year);
-        if (yearIdx > 2) {
-            titlePortion = text.substring(0, yearIdx);
-        }
-    } else if (seasonEpisode && seMatch) {
-        const seIdx = text.indexOf(seMatch[1]);
-        if (seIdx > 2) {
-            titlePortion = text.substring(0, seIdx);
-        }
-    } else {
-        const tokenMatch = text.match(tokenRegex);
-        if (tokenMatch && tokenMatch.index > 2) {
-            titlePortion = text.substring(0, tokenMatch.index);
-        }
-    }
-
-    // Clean dots, underscores, brackets, and extra spaces
-    titlePortion = titlePortion
-        .replace(/[\._]/g, ' ')
-        .replace(/[\[\]\(\)\{\}]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    // If cleaned title is purely a generic placeholder/resolution/noise, discard it so canonical fallback can take over
-    if (/^(?:2160p|1080p|720p|480p|4k|uhd|fhd|hd|stream|video|fast|slow|dead|nuvio|torrentio|rd|ad|tb|movie|series)$/i.test(titlePortion)) {
-        titlePortion = '';
-    }
-
+    const candidate = (stream && stream.behaviorHints && stream.behaviorHints.filename) 
+        || (rawText ? String(rawText).split('\n')[0].trim() : '');
+    const parsed = parseTorrentTitle(candidate);
     return {
-        cleanTitle: titlePortion,
-        year: year,
-        seasonEpisode: seasonEpisode,
-        releaseGroup: releaseGroup,
-        dvProfile: dvProfile
+        cleanTitle: parsed.title,
+        year: parsed.year,
+        seasonEpisode: parsed.seasonEpisode,
+        releaseGroup: parsed.releaseGroup,
+        dvProfile: parsed.dvProfile
     };
 }
 
@@ -332,267 +221,40 @@ function isStreamMatchingTarget(stream, target) {
 
 function parseStreamMetadata(stream) {
     if (!stream) return {};
-    const rawName = stream.name || '';
-    const rawTitle = stream.title || stream.description || stream.quality || '';
-    const filename = (stream.behaviorHints && typeof stream.behaviorHints.filename === 'string') ? stream.behaviorHints.filename : '';
-    const fullText = `${rawName} ${rawTitle} ${filename}`;
-    const sceneDetails = extractCleanTitleAndDetails(rawTitle || rawName, stream);
-
-    const metadata = {
-        cleanTitle: sceneDetails.cleanTitle,
-        year: sceneDetails.year,
-        seasonEpisode: sceneDetails.seasonEpisode,
-        releaseGroup: sceneDetails.releaseGroup,
-        dvProfile: sceneDetails.dvProfile,
-        resolution: null,
-        quality: null,
-        hdr: [],
-        special: [],
-        codec: null,
-        audio: [],
-        channels: null,
-        languages: [],
-        size: null,
-        sizeGB: null,
-        seeders: null,
+    const ingested = ingestStream(stream);
+    if (!ingested) return {};
+    const parsed = ingested.parsed || {};
+    return {
+        cleanTitle: parsed.title,
+        year: parsed.year,
+        seasonEpisode: parsed.seasonEpisode,
+        releaseGroup: parsed.releaseGroup,
+        dvProfile: parsed.dvProfile,
+        resolution: parsed.resolution,
+        quality: parsed.quality,
+        hdr: parsed.hdr || [],
+        special: parsed.special || [],
+        codec: parsed.codec,
+        audio: parsed.audio || [],
+        channels: parsed.channels,
+        languages: parsed.languages || [],
+        languageFlags: parsed.languageFlags || [],
+        size: ingested.sizeFormatted,
+        sizeBytes: ingested.sizeBytes,
+        sizeGB: ingested.sizeBytes ? Math.round((ingested.sizeBytes / (1024 * 1024 * 1024)) * 100) / 100 : null,
+        seeders: ingested.seeders,
         peers: null,
-        isCam: false,
-        isSample: false
+        isCam: parsed.isCam,
+        isSample: parsed.isSample,
+        isComplete: parsed.isComplete,
+        edition: parsed.edition,
+        isMultiAudio: parsed.isMultiAudio,
+        isDualAudio: parsed.isDualAudio
     };
-
-    // 1. CAM / TeleSync / Screener & Low-Quality Theater Recording Detection
-    const camPattern = /\b(?:cam|camrip|hdcam|hd[\s._-]?cam|telesync|tele[\s._-]?sync|ts|hdts|hd[\s._-]?ts|tc|telecine|tele[\s._-]?cine|dvdscr|scr|screener|workprint)\b/i;
-    if (camPattern.test(fullText)) {
-        metadata.isCam = true;
-        metadata.quality = 'CAM';
-    }
-
-    // Sample & Promo Detection
-    const samplePattern = /\b(?:sample|trailer|promo|teaser)\b/i;
-    if (samplePattern.test(fullText) || /[\s._\-/]sample[\s._\-\]\/]/i.test(fullText) || /\.sample\./i.test(fullText)) {
-        metadata.isSample = true;
-    }
-
-    // 2. Resolution (Direct property or sanitized pattern matching, ignoring release domain noise)
-    const directRes = String(stream.resolution || stream.quality || '').trim().toLowerCase();
-    if (/^(?:2160p|4k|uhd)$/i.test(directRes)) metadata.resolution = '2160p';
-    else if (/^(?:1080p|fhd)$/i.test(directRes)) metadata.resolution = '1080p';
-    else if (/^(?:720p|hd)$/i.test(directRes)) metadata.resolution = '720p';
-    else if (/^(?:480p|576p|sd)$/i.test(directRes)) metadata.resolution = '480p';
-
-    if (!metadata.resolution) {
-        // Strip provider/tracker domains containing numbers before scanning resolution
-        const cleanScanText = fullText.replace(/\b(?:uhdmovies|4khdhub|hdhub4u|hdhub|moviesmod|moviesdrive|net22|netmirror)[\w.-]*/gi, ' ');
-
-        const has2160 = /\b(?:2160[pi]?|4k|uhd|3840x2160)\b/i.test(cleanScanText);
-        const has1080 = /\b(?:1080[pi]?|fhd|full[\s._-]?hd|1920x1080)\b/i.test(cleanScanText);
-        const has720  = /\b(?:720[pi]?|1280x720)\b/i.test(cleanScanText) || (/\bhd\b/i.test(cleanScanText) && !/\b(?:hdtv|hdrip|hdcam|hdts)\b/i.test(fullText));
-        const has480  = /\b(?:480[pi]?|576[pi]?|sd|848x480)\b/i.test(cleanScanText);
-
-        if (has2160 && !has1080) {
-            metadata.resolution = '2160p';
-        } else if (has1080 && !has2160) {
-            metadata.resolution = '1080p';
-        } else if (has720 && !has1080 && !has2160) {
-            metadata.resolution = '720p';
-        } else if (has480 && !has1080 && !has2160 && !has720) {
-            metadata.resolution = '480p';
-        } else if (has2160 && has1080) {
-            // Check whether "1080p" is the actual video stream spec or if 4K was just source tag
-            if (/1080p.*(?:bluray|web-dl|webrip|remux|hevc|x264|x265)/i.test(cleanScanText) && !/2160p.*(?:bluray|web-dl|webrip|remux)/i.test(cleanScanText)) {
-                metadata.resolution = '1080p';
-            } else if (/2160p.*(?:bluray|web-dl|webrip|remux|hevc|x265)/i.test(cleanScanText)) {
-                metadata.resolution = '2160p';
-            } else {
-                const match2160 = cleanScanText.search(/\b(?:2160[pi]?|4k|uhd)\b/i);
-                const match1080 = cleanScanText.search(/\b(?:1080[pi]?|fhd)\b/i);
-                metadata.resolution = match2160 < match1080 ? '2160p' : '1080p';
-            }
-        }
-    }
-
-    // 3. Quality / Source
-    if (/\b(?:bd|uhd)?remux\b/i.test(fullText)) metadata.special.push('REMUX');
-    if (/\b(?:bluray|blu[\s._-]?ray|bd[\s._-]?rip|br[\s._-]?rip|bdr)\b/i.test(fullText)) metadata.quality = 'BluRay';
-    else if (/\b(?:web[\s._-]?dl|webdl)\b/i.test(fullText) || /\b(?:amzn|nf|dsnp|atvp|hmax|itunes)[\s._-]?web\b/i.test(fullText)) metadata.quality = 'WEB-DL';
-    else if (/\b(?:web[\s._-]?rip|webrip)\b/i.test(fullText)) metadata.quality = 'WEBRip';
-    else if (/\b(?:hdtv|pdtv|dsr|tvrip)\b/i.test(fullText)) metadata.quality = 'HDTV';
-    else if (/\b(?:dvd[\s._-]?rip|dvd|dvd-r)\b/i.test(fullText)) metadata.quality = 'DVDRip';
-    else if (metadata.isCam) metadata.quality = 'CAM';
-
-    // 4. Visual / HDR / IMAX / Bit-depth
-    const hasIMAXEnhanced = /\b(?:imax[\s._-]?enhanced)\b/i.test(fullText);
-    const hasIMAX = hasIMAXEnhanced || /\bimax\b/i.test(fullText) || /(?:^|[\s._\-\[/])imax(?:[\s._\-\]\/]|$)/i.test(fullText);
-    if (hasIMAXEnhanced) metadata.special.push('IMAX Enhanced');
-    else if (hasIMAX) metadata.special.push('IMAX');
-
-    const hasDV = /\b(?:dv|dovi|dvision|dolby[\s._-]?vision)\b/i.test(fullText)
-        || /(?:^|[\s._\-\[/])(?:dv|dovi)(?:[\s._\-\]\/]|$)/i.test(fullText)
-        || /\bprofile[\s._-]?[578]\b/i.test(fullText)
-        || /\b(?:dv[\s._-]?(?:hdr|hdr10|hdr10\+|hevc|remux|bluray|web|p\d+))\b/i.test(fullText)
-        || /\b(?:hdr10[\s._-]?dv|hdr[\s._-]?dv)\b/i.test(fullText);
-
-    const hasHDR10Plus = /\bhdr[\s._-]?10[\s._-]?(?:\+|plus)\b/i.test(fullText);
-    const hasHDR10 = /\bhdr[\s._-]?10\b/i.test(fullText) && !hasHDR10Plus;
-    const hasHDR = (/\bhdr\b/i.test(fullText) || /(?:^|[\s._\-\[/])hdr(?:[\s._\-\]\/]|$)/i.test(fullText)) && !hasHDR10Plus && !hasHDR10;
-
-    if (hasDV) {
-        metadata.hdr.push('Dolby Vision');
-        if (hasHDR10Plus) metadata.hdr.push('HDR10+');
-        else if (hasHDR10) metadata.hdr.push('HDR10');
-    } else if (hasHDR10Plus) {
-        metadata.hdr.push('HDR10+');
-    } else if (hasHDR10) {
-        metadata.hdr.push('HDR10');
-    } else if (hasHDR) {
-        metadata.hdr.push('HDR');
-    }
-
-    if (/\b10[\s._-]?bit\b/i.test(fullText) || /\bhevc[\s._-]?10\b/i.test(fullText) || /\bhi10p\b/i.test(fullText)) {
-        metadata.special.push('10bit');
-    }
-
-    // 5. Video Codec
-    if (/\b(?:hevc|h[\s._-]?265|x265)\b/i.test(fullText)) metadata.codec = 'HEVC';
-    else if (/\b(?:avc|h[\s._-]?264|x264)\b/i.test(fullText)) metadata.codec = 'H.264';
-    else if (/\b(?:av1|av01)\b/i.test(fullText)) metadata.codec = 'AV1';
-    else if (/\b(?:xvid|divx)\b/i.test(fullText)) metadata.codec = 'XviD';
-
-    // 6. Audio Formats & Atmos
-    const hasAtmos = /\b(?:atmos|dolby[\s._-]?atmos|ddpa|ddpa[\s._-]?[57]\.?1)\b/i.test(fullText)
-        || /(?:^|[\s._\-\[/])atmos(?:[\s._\-\]\/]|$)/i.test(fullText)
-        || /\b(?:ddp|dd\+|e[\s._-]?ac[\s._-]?3|true[\s._-]?hd)[\s._-]?atmos\b/i.test(fullText)
-        || /\batmos[\s._-]?(?:ddp|dd\+|true[\s._-]?hd)\b/i.test(fullText)
-        || /\b(?:e[\s._-]?ac[\s._-]?3[\s._-]?joc|joc)\b/i.test(fullText);
-
-    const hasTrueHD = /\btrue[\s._-]?hd\b/i.test(fullText);
-    const hasDDP = /(?:\bddpa?|\bdd\+|e[\s._-]?ac[\s._-]?3|dolby[\s._-]?digital[\s._-]?plus)/i.test(fullText);
-    const hasDD = /(?:\bdd|ac[\s._-]?3|dolby[\s._-]?digital)/i.test(fullText) && !hasDDP;
-    const hasDTSX = /\bdts[\s._-]?x\b/i.test(fullText);
-    const hasDTSHD = /\bdts[\s._-]?(?:hd|ma)\b/i.test(fullText);
-    const hasDTS = /\bdts\b/i.test(fullText) && !hasDTSHD && !hasDTSX;
-    const hasFLAC = /\bflac\b/i.test(fullText);
-    const hasAAC = /\baac(?:\d(?:\.\d)?)?\b/i.test(fullText);
-    const hasOpus = /\bopus\b/i.test(fullText);
-
-    if (hasAtmos) metadata.audio.push('Dolby Atmos');
-    if (hasTrueHD) metadata.audio.push('TrueHD');
-    else if (hasDDP) metadata.audio.push('DDP');
-    else if (hasDD) metadata.audio.push('DD');
-    else if (hasDTSX) metadata.audio.push('DTS:X');
-    else if (hasDTSHD) metadata.audio.push('DTS-HD MA');
-    else if (hasDTS) metadata.audio.push('DTS');
-    else if (hasFLAC) metadata.audio.push('FLAC');
-    else if (hasAAC && metadata.audio.length === 0) metadata.audio.push('AAC');
-    else if (hasOpus && metadata.audio.length === 0) metadata.audio.push('Opus');
-
-    // 7. Channels
-    if (/(?:^|[^0-9])7[. ]1(?![0-9])|\b8ch\b/i.test(fullText)) metadata.channels = '7.1';
-    else if (/(?:^|[^0-9])5[. ]1(?![0-9])|\b6ch\b/i.test(fullText)) metadata.channels = '5.1';
-    else if (/(?:^|[^0-9])2[. ]0(?![0-9])|\b2ch\b|\bstereo\b/i.test(fullText)) metadata.channels = '2.0';
-
-    // 8. Languages (Indian Regional & Global / Anime)
-    const hasMulti = /\b(?:multi[\s._-]?audio|multi[\s._-]?sub|multi)\b/i.test(fullText);
-    const hasDual = /\b(?:dual[\s._-]?audio|dual)\b/i.test(fullText) && !hasMulti;
-    if (hasMulti) metadata.languages.push('Multi-Audio');
-    else if (hasDual) metadata.languages.push('Dual-Audio');
-    if (/\bhindi\b|\bhin\b/i.test(fullText)) metadata.languages.push('Hindi');
-    if (/\btamil\b|\btam\b/i.test(fullText)) metadata.languages.push('Tamil');
-    if (/\btelugu\b|\btel\b/i.test(fullText)) metadata.languages.push('Telugu');
-    if (/\bmalayalam\b|\bmal\b/i.test(fullText)) metadata.languages.push('Malayalam');
-    if (/\bkannada\b|\bkan\b/i.test(fullText)) metadata.languages.push('Kannada');
-    if (/\bbengali|bangla\b|\bben\b/i.test(fullText)) metadata.languages.push('Bengali');
-    if (/\bpunjabi\b|\bpun\b/i.test(fullText)) metadata.languages.push('Punjabi');
-    if (/\bmarathi\b|\bmar\b/i.test(fullText)) metadata.languages.push('Marathi');
-    if (/\bjapanese|jap\b|\bjpn\b|\banime\b/i.test(fullText)) metadata.languages.push('Japanese');
-    if (/\benglish\b|\beng\b/i.test(fullText)) metadata.languages.push('English');
-    if (/\bkorean|kor\b/i.test(fullText)) metadata.languages.push('Korean');
-    if (/\bspanish|espanol|latino\b|\besp\b/i.test(fullText)) metadata.languages.push('Spanish');
-    if (/\bportuguese\b|\bpor\b/i.test(fullText)) metadata.languages.push('Portuguese');
-    if (/\bfrench|vff|vfq\b|\bfre\b/i.test(fullText)) metadata.languages.push('French');
-    if (/\bgerman|deutsch\b|\bger\b/i.test(fullText)) metadata.languages.push('German');
-    if (/\bitalian\b|\bita\b/i.test(fullText)) metadata.languages.push('Italian');
-    if (/\brussian\b|\brus\b/i.test(fullText)) metadata.languages.push('Russian');
-
-    // 9. Real File Size (Checks behaviorHints.videoSize, fileSize, size property, and regex)
-    let rawByteSize = null;
-    if (stream.behaviorHints && typeof stream.behaviorHints.videoSize === 'number' && stream.behaviorHints.videoSize > 0) {
-        rawByteSize = stream.behaviorHints.videoSize;
-    } else if (typeof stream.fileSize === 'number' && stream.fileSize > 0) {
-        rawByteSize = stream.fileSize;
-    } else if (typeof stream.size === 'number' && stream.size > 0) {
-        rawByteSize = stream.size;
-    }
-
-    if (rawByteSize && rawByteSize > 0) {
-        const gb = rawByteSize / (1024 * 1024 * 1024);
-        if (gb >= 0.9) {
-            metadata.size = `${gb.toFixed(2)} GB`;
-            metadata.sizeGB = Math.round(gb * 100) / 100;
-        } else {
-            const mb = rawByteSize / (1024 * 1024);
-            metadata.size = `${Math.round(mb)} MB`;
-            metadata.sizeGB = Math.round(gb * 100) / 100;
-        }
-    } else {
-        const rawSizeStr = typeof stream.size === 'string' ? stream.size : (typeof stream.fileSize === 'string' ? stream.fileSize : '');
-        const textForSize = `${rawSizeStr} ${fullText}`;
-        const sizeMatch = textForSize.match(/(?:💾|size[:\s]*|\[\s*)?(\d+(?:[.,]\d+)?)\s*(GB|MB|GiB|MiB|TB|TiB)\b/i);
-        if (sizeMatch) {
-            const cleanNum = parseFloat(sizeMatch[1].replace(',', '.'));
-            const unit = sizeMatch[2].toUpperCase();
-            if (!isNaN(cleanNum) && cleanNum > 0) {
-                metadata.size = `${cleanNum} ${unit}`;
-                if (unit.startsWith('T')) {
-                    metadata.sizeGB = Math.round(cleanNum * 1024 * 100) / 100;
-                } else if (unit.startsWith('M')) {
-                    metadata.sizeGB = Math.round((cleanNum / 1024) * 100) / 100;
-                } else {
-                    metadata.sizeGB = cleanNum;
-                }
-            }
-        }
-    }
-
-    // 10. Real Torrent Seeders & Peers (Checks stream properties first, then regex)
-    if (typeof stream.seeders === 'number' && stream.seeders >= 0) {
-        metadata.seeders = stream.seeders;
-    } else if (typeof stream.seeds === 'number' && stream.seeds >= 0) {
-        metadata.seeders = stream.seeds;
-    } else if (typeof stream.peerCount === 'number' && stream.peerCount >= 0) {
-        metadata.seeders = stream.peerCount;
-    } else {
-        const seederMatch = fullText.match(/(?:👤|🌱|\bseeds?[:\s]*|\bseeders?[:\s]*|\bs:)\s*(\d+)/i)
-            || fullText.match(/\[\s*(\d+)\s*\/\s*\d+\s*\]/);
-        if (seederMatch) {
-            metadata.seeders = parseInt(seederMatch[1], 10);
-        }
-    }
-
-    if (typeof stream.peers === 'number' && stream.peers >= 0) {
-        metadata.peers = stream.peers;
-    } else if (typeof stream.leechers === 'number' && stream.leechers >= 0) {
-        metadata.peers = stream.leechers;
-    } else {
-        const peerMatch = fullText.match(/(?:peers?[:\s]*|leechers?[:\s]*|leech[:\s]*|\bl:)\s*(\d+)/i);
-        if (peerMatch) {
-            metadata.peers = parseInt(peerMatch[1], 10);
-        }
-    }
-
-    return metadata;
 }
 
 function formatProviderLabel(providers, defaultName) {
-    if (!providers || !Array.isArray(providers) || providers.length === 0) {
-        return defaultName || 'Stream';
-    }
-    const cleanList = [...new Set(providers.filter(Boolean))];
-    if (cleanList.length === 0) return defaultName || 'Stream';
-    if (cleanList.length === 1) return cleanList[0];
-    if (cleanList.length === 2) return `${cleanList[0]} + ${cleanList[1]}`;
-    if (cleanList.length === 3) return `${cleanList[0]} + ${cleanList[1]} + ${cleanList[2]}`;
-    return `${cleanList[0]} + ${cleanList[1]} (+${cleanList.length - 2} more)`;
+    return formatProviderChain(providers, defaultName);
 }
 
 function normalizeTorrentHash(str) {
@@ -701,173 +363,15 @@ function deduplicateAndMergeStreams(streams, enabled = true) {
 }
 
 function formatStreamLabels(stream, latency = 150, isP2P = false, isDead = false, showSeeders = true, config = {}) {
-    const originalName = stream.name || 'Stream';
-    const originalTitle = stream.title || stream.description || stream.quality || '';
-    const rawProviderName = cleanProviderName(originalName);
-    const providerLabel = formatProviderLabel(stream.providers, rawProviderName);
-    const meta = parseStreamMetadata(stream);
-
-    // Apply merged seeders if present on stream
-    if (stream.seeders !== undefined && stream.seeders !== null && stream.seeders > 0) {
-        meta.seeders = Math.max(meta.seeders || 0, stream.seeders);
-    }
-
-    let seederBadge = null;
-    if (meta.seeders !== null && showSeeders !== false) {
-        if (meta.seeders >= 20) {
-            seederBadge = `🟢 ${meta.seeders} Seeders`;
-        } else if (meta.seeders >= 5) {
-            seederBadge = `🟡 ${meta.seeders} Seeders`;
-        } else {
-            seederBadge = `🔴 ${meta.seeders} Seeder${meta.seeders === 1 ? '' : 's'}`;
-        }
-    }
-
-    let debridBadge = null;
-    const dp = (config.debridProvider || '').toLowerCase();
-    if (stream.isDebridCached) {
-        if (dp === 'torbox') debridBadge = '⚡ [TB+] Instant';
-        else if (dp === 'alldebrid') debridBadge = '⚡ [AD+] Instant';
-        else if (dp === 'premiumize') debridBadge = '⚡ [PM+] Instant';
-        else debridBadge = '⚡ [RD+] Instant';
-    } else if (isP2P && dp) {
-        if (dp === 'torbox') debridBadge = '⚡ [TB]';
-        else if (dp === 'alldebrid') debridBadge = '⚡ [AD]';
-        else if (dp === 'premiumize') debridBadge = '⚡ [PM]';
-        else if (dp === 'realdebrid') debridBadge = '⚡ [RD]';
-    }
-
-    // High-impact top badges for stream.name
-    const topBadges = [
-        debridBadge,
-        meta.resolution === '2160p' ? '4K UHD' : (meta.resolution === '1080p' ? '1080p FHD' : meta.resolution),
-        ...meta.hdr,
-        meta.special.includes('REMUX') ? 'REMUX' : (meta.quality || null),
-        meta.audio.includes('Dolby Atmos') ? 'Atmos' : (meta.audio.includes('TrueHD') ? 'TrueHD' : (meta.audio.includes('DTS-HD MA') ? 'DTS-HD' : null)),
-        meta.languages.includes('Hindi') ? 'Hindi' : (meta.languages.includes('Dual-Audio') ? 'Dual' : null)
-    ].filter(Boolean);
-
-    const uniqueTopBadges = [...new Set(topBadges)];
-    const topBadgeStr = uniqueTopBadges.length > 0 ? ` • ${uniqueTopBadges.slice(0, 4).join(' • ')}` : '';
-
-    let nameLine = '';
-    if (isDead) {
-        nameLine = `🔴 DEAD • ${providerLabel}${topBadgeStr}`;
-    } else if (isP2P) {
-        nameLine = `🧲 P2P • ${providerLabel}${topBadgeStr}`;
-    } else {
-        const statusEmoji = latency < 800 ? '🟢' : '🟡';
-        const statusTag = latency < 800 ? 'FAST' : 'SLOW';
-        nameLine = `${statusEmoji} ${statusTag} (${latency}ms) • ${providerLabel}${topBadgeStr}`;
-    }
-
-    // If user explicitly disabled cleanTitles, fallback to raw description
-    if (config.cleanTitles === false) {
-        return {
-            name: nameLine,
-            title: originalTitle
-        };
-    }
-
-    // Build Ultra-Clean Formatted Description Card (stream.title)
-    const cardLines = [];
-
-    // Line 1: Header (Title, Year, Episode, Main Release Specs)
-    const titleHeaderParts = [];
-    const resolvedTitle = (config && config.target && config.target.title)
-        ? config.target.title
-        : (meta.cleanTitle || '');
-
-    const resolvedYear = (config && config.target && config.target.year)
-        ? config.target.year
-        : meta.year;
-
-    let resolvedSeasonEpisode = meta.seasonEpisode;
-    if (config && config.target && (config.target.type === 'series' || config.target.type === 'tv') && config.target.season && config.target.episode) {
-        const reqS = String(config.target.season).padStart(2, '0');
-        const reqE = String(config.target.episode).padStart(2, '0');
-        resolvedSeasonEpisode = `S${reqS}E${reqE}`;
-    }
-
-    if (resolvedTitle) {
-        let titleHeader = resolvedTitle;
-        if (resolvedYear) titleHeader += ` (${resolvedYear})`;
-        if (resolvedSeasonEpisode) titleHeader += ` • ${resolvedSeasonEpisode}`;
-        titleHeaderParts.push(titleHeader);
-    }
-    const qualityTags = [
-        meta.resolution ? (meta.resolution === '2160p' ? '4K UHD' : meta.resolution === '1080p' ? '1080p FHD' : meta.resolution === '720p' ? '720p HD' : meta.resolution) : null,
-        meta.special.includes('REMUX') ? 'REMUX' : (meta.quality || null),
-        meta.special.includes('IMAX Enhanced') ? 'IMAX Enhanced' : (meta.special.includes('IMAX') ? 'IMAX' : null),
-        meta.codec || null,
-        meta.special.includes('10bit') ? '10-bit' : null
-    ].filter(Boolean);
-
-    if (qualityTags.length > 0) {
-        titleHeaderParts.push(`[${qualityTags.join(' • ')}]`);
-    }
-    if (titleHeaderParts.length > 0) {
-        cardLines.push(`🎬 ${titleHeaderParts.join(' ')}`);
-    }
-
-    // Line 2: Audio & Visual Studio Badges
-    const avBadges = [];
-    if (meta.hdr && meta.hdr.length > 0) {
-        meta.hdr.forEach(h => {
-            if (h === 'Dolby Vision' && meta.dvProfile) avBadges.push(`Dolby Vision ${meta.dvProfile}`);
-            else avBadges.push(h);
-        });
-    }
-    if (meta.audio && meta.audio.length > 0) {
-        const audioStr = meta.audio.join(' + ');
-        const chanStr = meta.channels ? ` ${meta.channels}` : '';
-        avBadges.push(`${audioStr}${chanStr}`);
-    } else if (meta.channels) {
-        avBadges.push(`Audio ${meta.channels}`);
-    }
-    if (avBadges.length > 0) {
-        cardLines.push(`💎 ${avBadges.join(' • ')}`);
-    }
-
-    // Line 3: Languages & Dubs (if present)
-    if (meta.languages && meta.languages.length > 0) {
-        const langTags = meta.languages.map(l => {
-            if (l === 'Hindi') return '🇮🇳 Hindi Dub';
-            if (l === 'Tamil') return 'Tamil';
-            if (l === 'Telugu') return 'Telugu';
-            if (l === 'Malayalam') return 'Malayalam';
-            if (l === 'Kannada') return 'Kannada';
-            if (l === 'Japanese') return '🇯🇵 Japanese Audio/Sub';
-            if (l === 'English') return '🇬🇧 English';
-            if (l === 'Dual-Audio') return '🌐 Dual-Audio';
-            if (l === 'Multi-Audio') return '🌐 Multi-Audio';
-            return l;
-        });
-        cardLines.push(`🌐 ${langTags.join(' • ')}`);
-    }
-
-    // Line 4: Media Specs Row (File Size, Health, Release Group, Providers)
-    const metaRow = [];
-    if (meta.size && config.showFileSize !== false) {
-        metaRow.push(`📦 ${meta.size}`);
-    }
-    if (seederBadge && showSeeders !== false) {
-        metaRow.push(seederBadge);
-    }
-    if (meta.releaseGroup && config.showReleaseGroup !== false) {
-        metaRow.push(`🏷️ ${meta.releaseGroup}`);
-    }
-    metaRow.push(`🔗 ${providerLabel}`);
-    if (metaRow.length > 0) {
-        cardLines.push(metaRow.join(' • '));
-    }
-
-    const cleanTitleCard = cardLines.join('\n');
-
-    return {
-        name: nameLine,
-        title: cleanTitleCard || originalTitle
-    };
+    const ingested = ingestStream(stream, config);
+    if (!ingested) return { name: stream.name || 'Stream', title: stream.title || '' };
+    if (isP2P) ingested.isP2P = true;
+    return formatStreamCard(ingested, {
+        latency,
+        isDead,
+        config: { ...config, showSeeders },
+        preset: config.cardPreset || 'aiostreams'
+    });
 }
 
 function getResolutionTier(stream) {
@@ -1226,6 +730,144 @@ async function testStream(stream, showSeeders = true, config = {}) {
     }
 }
 
+/**
+ * Builds a standardized Scene release filename for Nuvio Badge Matcher.
+ * Matches Nuvio / NardBadges regex requirements for Resolution, HDR/DV, Codec, Audio, Channels, and Languages.
+ */
+function buildNuvioSceneFilename(meta, target = {}) {
+    const parts = [];
+    
+    // 1. Title & Year
+    const title = target.title || meta.cleanTitle || 'Video';
+    const cleanTitle = title.replace(/[^a-zA-Z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.|\.$/g, '');
+    parts.push(cleanTitle);
+
+    const year = target.year || meta.year;
+    if (year) parts.push(String(year));
+
+    // 2. Season/Episode if series
+    if (meta.seasonEpisode) {
+        parts.push(meta.seasonEpisode.toUpperCase());
+    } else if (target.season && target.episode) {
+        const s = String(target.season).padStart(2, '0');
+        const e = String(target.episode).padStart(2, '0');
+        parts.push(`S${s}E${e}`);
+    }
+
+    // 3. Resolution (2160p.UHD, 1080p, 720p)
+    const res = (meta.resolution || '').toLowerCase();
+    if (res.includes('4k') || res.includes('2160') || res.includes('uhd')) {
+        parts.push('2160p.UHD');
+    } else if (res.includes('1080') || res.includes('fhd')) {
+        parts.push('1080p');
+    } else if (res.includes('720') || res.includes('hd')) {
+        parts.push('720p');
+    } else {
+        parts.push('1080p');
+    }
+
+    // 4. Source / Quality (Remux, BluRay, WEB-DL, WEBRip)
+    const qual = (meta.quality || '').toLowerCase();
+    const isRemux = (meta.special && meta.special.includes('REMUX')) || qual.includes('remux');
+    if (isRemux) {
+        parts.push('Remux');
+    } else if (qual.includes('bluray') || qual.includes('blu-ray') || qual.includes('bdrip')) {
+        parts.push('BluRay');
+    } else if (qual.includes('web-rip') || qual.includes('webrip')) {
+        parts.push('WEBRip');
+    } else {
+        parts.push('WEB-DL');
+    }
+
+    // 5. Visual / HDR (DV, HDR10+, HDR10, HDR)
+    const hdrList = Array.isArray(meta.hdr) ? meta.hdr.map(h => String(h).toLowerCase()) : [];
+    const hasDV = hdrList.some(h => h.includes('vision') || h.includes('dv') || h.includes('dovi'));
+    const hasHDR10Plus = hdrList.some(h => h.includes('hdr10+') || h.includes('hdr10plus') || h.includes('hdr10 plus'));
+    const hasHDR10 = hdrList.some(h => h.includes('hdr10') && !h.includes('+') && !h.includes('plus'));
+    const hasHDR = hdrList.some(h => h.includes('hdr')) || hasHDR10Plus || hasHDR10;
+
+    if (hasDV) parts.push('DV');
+    if (hasHDR10Plus) parts.push('HDR10+');
+    else if (hasHDR10) parts.push('HDR10');
+    else if (hasHDR) parts.push('HDR');
+
+    // 6. Codec (HEVC.x265, AVC.x264, AV1)
+    const codec = (meta.codec || '').toLowerCase();
+    if (codec.includes('hevc') || codec.includes('265') || codec.includes('h265')) {
+        parts.push('HEVC.x265');
+    } else if (codec.includes('av1')) {
+        parts.push('AV1');
+    } else if (codec.includes('avc') || codec.includes('264') || codec.includes('h264')) {
+        parts.push('AVC.x264');
+    } else {
+        parts.push('HEVC.x265');
+    }
+
+    // 7. Bit Depth
+    if (meta.bitDepth || (meta.special && meta.special.some(s => /10bit|10-bit/i.test(s)))) {
+        parts.push('10bit');
+    }
+
+    // 8. Audio Codec & Channels
+    const audioList = Array.isArray(meta.audio) ? meta.audio.map(a => String(a).toLowerCase()) : [];
+    const hasAtmos = audioList.some(a => a.includes('atmos'));
+    const hasTrueHD = audioList.some(a => a.includes('truehd') || a.includes('true-hd'));
+    const hasDDP = audioList.some(a => a.includes('ddp') || a.includes('dd+') || a.includes('eac3') || a.includes('plus'));
+    const hasDD = audioList.some(a => (a.includes('dd') || a.includes('ac3')) && !a.includes('plus') && !a.includes('ddp'));
+    const hasDtsX = audioList.some(a => a.includes('dts-x') || a.includes('dtsx'));
+    const hasDtsHdMa = audioList.some(a => a.includes('dts-hd ma') || a.includes('dtshd ma') || a.includes('ma'));
+    const hasDtsHd = audioList.some(a => a.includes('dts-hd') && !hasDtsHdMa);
+    const hasDTS = audioList.some(a => a.includes('dts') && !hasDtsX && !hasDtsHd && !hasDtsHdMa);
+    const hasAAC = audioList.some(a => a.includes('aac'));
+    const hasFLAC = audioList.some(a => a.includes('flac'));
+
+    let audioToken = '';
+    if (hasTrueHD) audioToken = 'TrueHD';
+    else if (hasDDP) audioToken = 'DDP';
+    else if (hasDD) audioToken = 'DD';
+    else if (hasDtsX) audioToken = 'DTS-X';
+    else if (hasDtsHdMa) audioToken = 'DTS-HD.MA';
+    else if (hasDtsHd) audioToken = 'DTS-HD';
+    else if (hasDTS) audioToken = 'DTS';
+    else if (hasFLAC) audioToken = 'FLAC';
+    else if (hasAAC) audioToken = 'AAC';
+
+    const channels = meta.channels ? String(meta.channels) : null;
+    let chToken = '';
+    if (channels) {
+        if (channels.includes('7.1')) chToken = '7.1';
+        else if (channels.includes('6.1')) chToken = '6.1';
+        else if (channels.includes('5.1')) chToken = '5.1';
+        else if (channels.includes('2.0')) chToken = '2.0';
+    }
+
+    if (audioToken && chToken) {
+        parts.push(`${audioToken}.${chToken}`);
+    } else if (audioToken) {
+        parts.push(audioToken);
+    } else if (chToken) {
+        parts.push(chToken);
+    }
+
+    if (hasAtmos) {
+        parts.push('Atmos');
+    }
+
+    // 9. Languages
+    const langs = Array.isArray(meta.languages) ? meta.languages : [];
+    for (const lang of langs) {
+        const l = String(lang).trim();
+        if (l) parts.push(l);
+    }
+    if (meta.isMultiAudio && !langs.some(l => /multi/i.test(l))) {
+        parts.push('Multi');
+    }
+
+    // 10. Release Group & Extension
+    const group = meta.releaseGroup || 'FLUX';
+    return `${parts.join('.')}-${group}.mkv`;
+}
+
 async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
     if (!streams || streams.length === 0) return [];
 
@@ -1549,28 +1191,63 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
             }
         }
 
-        // Enrich behaviorHints.filename for Nuvio Fusion badges
+        // Enrich behaviorHints.filename and clientResolve for Nuvio native and fusion badges
         const meta = parseStreamMetadata(stremioStream);
-        const tokens = [
-            meta.resolution || '1080p',
-            meta.quality || 'WEB-DL',
-            ...meta.hdr,
-            ...meta.special,
-            meta.codec || 'HEVC',
-            ...meta.audio,
-            meta.channels,
-            ...meta.languages
-        ].filter(Boolean);
-
-        const cleanBase = (config && config.target && config.target.title)
-            ? config.target.title
-            : (meta.cleanTitle || 'Video');
-        const baseTitle = cleanBase.replace(/[^a-zA-Z0-9]/g, '.').replace(/\.+/g, '.');
-        const synthFilename = `${baseTitle}.${tokens.join('.')}.mkv`;
+        const synthFilename = buildNuvioSceneFilename(meta, config && config.target ? config.target : {});
 
         stremioStream.behaviorHints = {
             ...(stremioStream.behaviorHints || {}),
-            filename: stremioStream.behaviorHints?.filename || synthFilename
+            filename: synthFilename
+        };
+
+        const target = (config && config.target) || {};
+        const mediaType = target.type === 'series' || target.type === 'tv' ? 'series' : 'movie';
+        const seasonNum = target.season ? parseInt(target.season, 10) : (meta.season ? parseInt(meta.season, 10) : null);
+        const episodeNum = target.episode ? parseInt(target.episode, 10) : (meta.episode ? parseInt(meta.episode, 10) : null);
+
+        stremioStream.clientResolve = {
+            type: stremioStream.url ? 'url' : 'torrent',
+            infoHash: stremioStream.infoHash || null,
+            torrentName: synthFilename,
+            filename: synthFilename,
+            mediaType: mediaType,
+            mediaId: target.id || null,
+            mediaOnlyId: target.id ? target.id.split(':')[0] : null,
+            title: target.title || meta.cleanTitle || 'Video',
+            season: seasonNum,
+            episode: episodeNum,
+            isCached: Boolean(s.isDebridCached),
+            stream: {
+                raw: {
+                    torrentName: synthFilename,
+                    filename: synthFilename,
+                    size: meta.sizeBytes || null,
+                    tracker: originalProvider || '',
+                    parsed: {
+                        raw_title: synthFilename,
+                        parsed_title: target.title || meta.cleanTitle || 'Video',
+                        year: target.year ? parseInt(target.year, 10) : (meta.year || null),
+                        resolution: meta.resolution || '1080p',
+                        seasons: seasonNum ? [seasonNum] : [],
+                        episodes: episodeNum ? [episodeNum] : [],
+                        quality: meta.quality || 'WEB-DL',
+                        hdr: Array.isArray(meta.hdr) && meta.hdr.length > 0 ? meta.hdr : [],
+                        codec: meta.codec || 'HEVC',
+                        audio: Array.isArray(meta.audio) && meta.audio.length > 0 ? meta.audio : [],
+                        channels: meta.channels ? [String(meta.channels)] : [],
+                        languages: Array.isArray(meta.languages) && meta.languages.length > 0 ? meta.languages : [],
+                        group: meta.releaseGroup || 'NUVIO',
+                        network: null,
+                        edition: meta.edition || null,
+                        duration: null,
+                        bit_depth: meta.bitDepth || (meta.special?.includes('10bit') ? '10bit' : null),
+                        extended: Boolean(meta.edition && /extended/i.test(meta.edition)),
+                        theatrical: Boolean(meta.edition && /theatrical/i.test(meta.edition)),
+                        remastered: Boolean(meta.edition && /remastered/i.test(meta.edition)),
+                        unrated: Boolean(meta.edition && /unrated/i.test(meta.edition))
+                    }
+                }
+            }
         };
 
         return stremioStream;

@@ -10,26 +10,26 @@ const MAX_CACHE_SIZE = 10000;
 
 // Language definitions with standard codes, display names, and flag emojis
 const LANGUAGE_DEFINITIONS = [
-    { name: 'Hindi', regex: /\b(?:hindi|hin)\b/i, flag: '🇮🇳' },
-    { name: 'Tamil', regex: /\b(?:tamil|tam)\b/i, flag: '🇮🇳' },
-    { name: 'Telugu', regex: /\b(?:telugu|tel)\b/i, flag: '🇮🇳' },
-    { name: 'Malayalam', regex: /\b(?:malayalam|mal)\b/i, flag: '🇮🇳' },
-    { name: 'Kannada', regex: /\b(?:kannada|kan)\b/i, flag: '🇮🇳' },
-    { name: 'Bengali', regex: /\b(?:bengali|bangla|ben)\b/i, flag: '🇮🇳' },
-    { name: 'Punjabi', regex: /\b(?:punjabi|pun)\b/i, flag: '🇮🇳' },
-    { name: 'Marathi', regex: /\b(?:marathi|mar)\b/i, flag: '🇮🇳' },
-    { name: 'English', regex: /\b(?:english|eng)\b/i, flag: '🇬🇧' },
-    { name: 'Japanese', regex: /\b(?:japanese|jap|jpn)\b/i, flag: '🇯🇵' },
-    { name: 'Korean', regex: /\b(?:korean|kor)\b/i, flag: '🇰🇷' },
-    { name: 'Spanish', regex: /\b(?:spanish|espanol|castellano|latino|esp)\b/i, flag: '🇪🇸' },
-    { name: 'French', regex: /\b(?:french|francais|vff|vfq|fre|fra)\b/i, flag: '🇫🇷' },
-    { name: 'German', regex: /\b(?:german|deutsch|ger|deu)\b/i, flag: '🇩🇪' },
-    { name: 'Italian', regex: /\b(?:italian|italiano|ita)\b/i, flag: '🇮🇹' },
-    { name: 'Portuguese', regex: /\b(?:portuguese|portugues|por)\b/i, flag: '🇵🇹' },
-    { name: 'Russian', regex: /\b(?:russian|rus)\b/i, flag: '🇷🇺' },
-    { name: 'Chinese', regex: /\b(?:chinese|mandarin|cantonese|chi|zho)\b/i, flag: '🇨🇳' },
-    { name: 'Arabic', regex: /\b(?:arabic|ara)\b/i, flag: '🇦🇪' },
-    { name: 'Turkish', regex: /\b(?:turkish|tur)\b/i, flag: '🇹🇷' }
+    { name: 'Hindi', regex: /(?:\bhindi\b|(?:^|[\. _\[\(\-,+/])hin(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Tamil', regex: /(?:\btamil\b|(?:^|[\. _\[\(\-,+/])tam(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Telugu', regex: /(?:\btelugu\b|(?:^|[\. _\[\(\-,+/])tel(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Malayalam', regex: /(?:\bmalayalam\b|(?:^|[\. _\[\(\-,+/])mal(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Kannada', regex: /(?:\bkannada\b|(?:^|[\. _\[\(\-,+/])kan(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Bengali', regex: /(?:\bbengali\b|\bbangla\b|(?:^|[\. _\[\(\-,+/])ben(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Punjabi', regex: /(?:\bpunjabi\b|(?:^|[\. _\[\(\-,+/])pun(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'Marathi', regex: /(?:\bmarathi\b|(?:^|[\. _\[\(\-,+/])mar(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇳' },
+    { name: 'English', regex: /(?:\benglish\b|(?:^|[\. _\[\(\-,+/])eng(?:[\. _\]\)\-,+/]|$))/i, flag: '🇬🇧' },
+    { name: 'Japanese', regex: /(?:\bjapanese\b|\bjap\b|(?:^|[\. _\[\(\-,+/])jpn(?:[\. _\]\)\-,+/]|$))/i, flag: '🇯🇵' },
+    { name: 'Korean', regex: /(?:\bkorean\b|(?:^|[\. _\[\(\-,+/])kor(?:[\. _\]\)\-,+/]|$))/i, flag: '🇰🇷' },
+    { name: 'Spanish', regex: /(?:\bspanish\b|\bespanol\b|\bcastellano\b|\blatino\b|(?:^|[\. _\[\(\-,+/])esp(?:[\. _\]\)\-,+/]|$))/i, flag: '🇪🇸' },
+    { name: 'French', regex: /(?:\bfrench\b|\bfrancais\b|\bvff\b|\bvfq\b|(?:^|[\. _\[\(\-,+/])(?:fre|fra)(?:[\. _\]\)\-,+/]|$))/i, flag: '🇫🇷' },
+    { name: 'German', regex: /(?:\bgerman\b|\bdeutsch\b|(?:^|[\. _\[\(\-,+/])(?:ger|deu)(?:[\. _\]\)\-,+/]|$))/i, flag: '🇩🇪' },
+    { name: 'Italian', regex: /(?:\bitalian\b|\bitaliano\b|(?:^|[\. _\[\(\-,+/])ita(?:[\. _\]\)\-,+/]|$))/i, flag: '🇮🇹' },
+    { name: 'Portuguese', regex: /(?:\bportuguese\b|\bportugues\b|(?:^|[\. _\[\(\-,+/])por(?:[\. _\]\)\-,+/]|$))/i, flag: '🇵🇹' },
+    { name: 'Russian', regex: /(?:\brussian\b|(?:^|[\. _\[\(\-,+/])rus(?:[\. _\]\)\-,+/]|$))/i, flag: '🇷🇺' },
+    { name: 'Chinese', regex: /(?:\bchinese\b|\bmandarin\b|\bcantonese\b|(?:^|[\. _\[\(\-,+/])(?:chi|zho)(?:[\. _\]\)\-,+/]|$))/i, flag: '🇨🇳' },
+    { name: 'Arabic', regex: /(?:\barabic\b|(?:^|[\. _\[\(\-,+/])ara(?:[\. _\]\)\-,+/]|$))/i, flag: '🇦🇪' },
+    { name: 'Turkish', regex: /(?:\bturkish\b|(?:^|[\. _\[\(\-,+/])tur(?:[\. _\]\)\-,+/]|$))/i, flag: '🇹🇷' }
 ];
 
 // Edition tags
@@ -111,8 +111,10 @@ function createEmptyResult(raw) {
         channels: null,
         languages: [],
         languageFlags: [],
+        subtitles: [],
         isMultiAudio: false,
         isDualAudio: false,
+        isHindi: false,
         seasons: [],
         episodes: [],
         seasonEpisode: null,
@@ -204,7 +206,7 @@ function extractAllAttributes(text, originalRaw) {
         res.dvProfile = `Profile ${dvMatch[1]}`;
     }
 
-    const hasHDR10Plus = /\bhdr[\s._-]?10[\s._-]?(?:\+|plus)\b/i.test(text);
+    const hasHDR10Plus = /\bhdr[\s._-]?10[\s._-]?(?:\+|plus)(?=[^a-z0-9]|$)/i.test(text);
     const hasHDR10 = /\bhdr[\s._-]?10\b/i.test(text) && !hasHDR10Plus;
     const hasHDR = (/\bhdr\b/i.test(text) || /(?:^|[\s._\-\[/])hdr(?:[\s._\-\]\/]|$)/i.test(text)) && !hasHDR10Plus && !hasHDR10;
 
@@ -239,7 +241,7 @@ function extractAllAttributes(text, originalRaw) {
     else if (/\b(?:av1|av01)\b/i.test(text)) res.codec = 'AV1';
     else if (/\b(?:xvid|divx)\b/i.test(text)) res.codec = 'XviD';
 
-    // 6. Audio Codecs & Formats
+    // 6. Audio Codecs & Formats (Capture ALL audio tracks present, e.g. Hindi DDP + English DTS-HD)
     const hasAtmos = /\b(?:atmos|dolby[\s._-]?atmos|ddpa|ddpa[\s._-]?[57]\.?1)\b/i.test(text)
         || /(?:^|[\s._\-\[/])atmos(?:[\s._\-\]\/]|$)/i.test(text)
         || /\b(?:ddp|dd\+|e[\s._-]?ac[\s._-]?3|true[\s._-]?hd)[\s._-]?atmos\b/i.test(text)
@@ -247,48 +249,79 @@ function extractAllAttributes(text, originalRaw) {
         || /\b(?:e[\s._-]?ac[\s._-]?3[\s._-]?joc|joc)\b/i.test(text);
 
     const hasTrueHD = /\btrue[\s._-]?hd\b/i.test(text);
-    const hasDDP = /(?:\bddpa?|\bdd\+|e[\s._-]?ac[\s._-]?3|dolby[\s._-]?digital[\s._-]?plus)/i.test(text);
-    const hasDD = /(?:\bdd|ac[\s._-]?3|dolby[\s._-]?digital)/i.test(text) && !hasDDP;
     const hasDTSX = /\bdts[\s._-]?x\b/i.test(text);
     const hasDTSHD = /\bdts[\s._-]?(?:hd|ma)\b/i.test(text);
     const hasDTS = /\bdts\b/i.test(text) && !hasDTSHD && !hasDTSX;
+    const hasDDP = /(?:\bddpa?|\bdd\+|e[\s._-]?ac[\s._-]?3|dolby[\s._-]?digital[\s._-]?plus)/i.test(text);
+    const hasDD = /(?:\bdd|ac[\s._-]?3|dolby[\s._-]?digital)/i.test(text) && !hasDDP;
     const hasFLAC = /\bflac\b/i.test(text);
     const hasAAC = /\baac(?:\d(?:\.\d)?)?\b/i.test(text);
     const hasOpus = /\bopus\b/i.test(text);
 
     if (hasAtmos) res.audio.push('Dolby Atmos');
     if (hasTrueHD) res.audio.push('TrueHD');
-    else if (hasDDP) res.audio.push('DDP');
-    else if (hasDD) res.audio.push('DD');
-    else if (hasDTSX) res.audio.push('DTS:X');
-    else if (hasDTSHD) res.audio.push('DTS-HD MA');
+    if (hasDTSX) res.audio.push('DTS:X');
+    if (hasDTSHD) res.audio.push('DTS-HD MA');
     else if (hasDTS) res.audio.push('DTS');
-    else if (hasFLAC) res.audio.push('FLAC');
-    else if (hasAAC && res.audio.length === 0) res.audio.push('AAC');
+    if (hasDDP) res.audio.push('DDP');
+    else if (hasDD) res.audio.push('DD');
+    if (hasFLAC) res.audio.push('FLAC');
+    if (hasAAC && res.audio.length === 0) res.audio.push('AAC');
     else if (hasOpus && res.audio.length === 0) res.audio.push('Opus');
 
-    // Channels
-    if (/(?:^|[^0-9])7[. ]1(?![0-9])|\b8ch\b/i.test(text)) res.channels = '7.1';
-    else if (/(?:^|[^0-9])5[. ]1(?![0-9])|\b6ch\b/i.test(text)) res.channels = '5.1';
-    else if (/(?:^|[^0-9])2[. ]0(?![0-9])|\b2ch\b|\bstereo\b/i.test(text)) res.channels = '2.0';
+    // Channels - detect highest channel count across audio tracks
+    const has71 = /(?:^|[^0-9])7[. ]1(?![0-9])|\b8ch\b/i.test(text);
+    const has51 = /(?:^|[^0-9])5[. ]1(?![0-9])|\b6ch\b/i.test(text);
+    const has20 = /(?:^|[^0-9])2[. ]0(?![0-9])|\b2ch\b|\bstereo\b/i.test(text);
+    if (has71) res.channels = '7.1';
+    else if (has51) res.channels = '5.1';
+    else if (has20) res.channels = '2.0';
 
-    // 7. Languages & Multi-Audio
-    const hasMulti = /\b(?:multi[\s._-]?audio|multi[\s._-]?sub|multi)\b/i.test(text);
-    const hasDual = /\b(?:dual[\s._-]?audio|dual)\b/i.test(text) && !hasMulti;
-    res.isMultiAudio = hasMulti;
-    res.isDualAudio = hasDual;
-
-    if (hasMulti) res.languages.push('Multi-Audio');
-    else if (hasDual) res.languages.push('Dual-Audio');
+    // 7. Subtitle Isolation & Language Detection
+    // Do NOT allow subtitle tags (e.g. [Subs: Hin, Eng], HinSub, ESubs) to contaminate spoken audio languages
+    let audioText = text;
+    const subMatches = [];
+    audioText = audioText.replace(/(?:\[|\(|\b)(?:(?:hard|soft|forced)?subs?|subtitles?|esubs?|vost)[\s:._-]*([^\]\)\n]+)(?:\]|\)|\b)/gi, (match, p1) => {
+        subMatches.push(p1);
+        return ' ';
+    });
+    audioText = audioText.replace(/\b(?:hinsub|engsub|esub|softsub|hardsub)\b/gi, ' ');
 
     for (const lang of LANGUAGE_DEFINITIONS) {
-        if (lang.regex.test(text)) {
+        if (subMatches.some(s => lang.regex.test(s))) {
+            if (!res.subtitles.includes(lang.name)) {
+                res.subtitles.push(lang.name);
+            }
+        }
+    }
+
+    // Spoken Audio Languages & Multi-Audio
+    const hasMultiAudio = /\b(?:multi[\s._-]?audio)\b/i.test(audioText) || (/\bmulti\b/i.test(audioText) && !/\bmulti[\s._-]?sub/i.test(text));
+    const hasDualAudio = /\b(?:dual[\s._-]?audio|dual)\b/i.test(audioText) && !hasMultiAudio;
+
+    for (const lang of LANGUAGE_DEFINITIONS) {
+        if (lang.regex.test(audioText)) {
             if (!res.languages.includes(lang.name)) {
                 res.languages.push(lang.name);
                 res.languageFlags.push(lang.flag);
             }
         }
     }
+
+    // Determine Dual-Audio / Multi-Audio flags accurately
+    const isDual = hasDualAudio || (res.languages.length === 2 && !hasMultiAudio);
+    const isMulti = hasMultiAudio || res.languages.length >= 3;
+
+    res.isDualAudio = isDual && !isMulti;
+    res.isMultiAudio = isMulti;
+
+    if (res.isMultiAudio && !res.languages.includes('Multi-Audio')) {
+        res.languages.unshift('Multi-Audio');
+    } else if (res.isDualAudio && !res.languages.includes('Dual-Audio')) {
+        res.languages.unshift('Dual-Audio');
+    }
+
+    res.isHindi = res.languages.includes('Hindi');
 
     // 8. Editions
     for (const ed of EDITION_DEFINITIONS) {
@@ -331,6 +364,15 @@ function extractAllAttributes(text, originalRaw) {
                     res.isComplete = true;
                 }
             }
+        }
+    }
+
+    // Anime standalone episode pattern: " - 01 ", " Ep 05 ", " Episode 12 "
+    if (res.episodes.length === 0) {
+        const animeEpMatch = text.match(/(?:^|[\s._-])(?:e|ep|episode|\-)\s*0*(\d{1,3})(?=\s*[\(\[._\s-]|$)/i);
+        if (animeEpMatch) {
+            res.episodes.push(parseInt(animeEpMatch[1], 10));
+            res.seasonEpisode = `E${String(parseInt(animeEpMatch[1], 10)).padStart(2, '0')}`;
         }
     }
 

@@ -58,15 +58,28 @@ function formatStreamCard(ingested, options = {}) {
     const debridBadge = getDebridBadge(ingested, config);
     const seederBadge = getSeederBadge(ingested.seeders, config.showSeeders !== false);
 
+    // Language badge for header line
+    let langTopBadge = null;
+    const realLangs = (parsed.languages || []).filter(l => l !== 'Dual-Audio' && l !== 'Multi-Audio');
+    if (parsed.isMultiAudio || parsed.languages.includes('Multi-Audio') || realLangs.length >= 3) {
+        langTopBadge = 'Multi Audio';
+    } else if (parsed.isDualAudio || parsed.languages.includes('Dual-Audio') || realLangs.length === 2) {
+        langTopBadge = 'Dual Audio';
+    } else if (realLangs.length === 1) {
+        if (realLangs[0] !== 'English') {
+            langTopBadge = realLangs[0];
+        }
+    }
+
     // 1. Build Header Line (stream.name)
     const topBadges = [
         debridBadge,
         parsed.resolution === '2160p' ? '4K UHD' : (parsed.resolution === '1080p' ? '1080p FHD' : (parsed.resolution === '720p' ? '720p HD' : parsed.resolution)),
         ...parsed.hdr,
         parsed.special.includes('REMUX') ? 'REMUX' : (parsed.quality || null),
-        parsed.audio.includes('Dolby Atmos') ? 'Atmos' : (parsed.audio.includes('TrueHD') ? 'TrueHD' : (parsed.audio.includes('DTS-HD MA') ? 'DTS-HD' : null)),
+        parsed.audio.includes('Dolby Atmos') ? 'Atmos' : (parsed.audio.includes('TrueHD') ? 'TrueHD' : (parsed.audio.includes('DTS-HD MA') ? 'DTS-HD' : (parsed.audio.includes('DDP') ? 'DDP' : null))),
         parsed.channels || null,
-        parsed.languages.includes('Hindi') ? 'Hindi' : (parsed.languages.includes('Dual-Audio') ? 'Dual' : null)
+        langTopBadge
     ].filter(Boolean);
 
     const uniqueTopBadges = [...new Set(topBadges)];
@@ -173,22 +186,66 @@ function formatStreamCard(ingested, options = {}) {
         cardLines.push(`💎 ${avBadges.join(' • ')}`);
     }
 
-    // Line 3: Languages & Dubs (with accurate country flags)
-    if (parsed.languages && parsed.languages.length > 0) {
-        const langTags = parsed.languages.map(l => {
-            if (l === 'Hindi') return '🇮🇳 Hindi Dub';
+    // Line 3: Spoken Languages & Audio Tracks (with accurate country flags)
+    const displayLangs = [];
+    const nonGenericLangs = (parsed.languages || []).filter(l => l !== 'Dual-Audio' && l !== 'Multi-Audio');
+
+    if (parsed.isMultiAudio || parsed.languages.includes('Multi-Audio') || nonGenericLangs.length >= 3) {
+        const langNames = nonGenericLangs.map(l => {
+            if (l === 'English') return '🇬🇧 English';
+            if (l === 'Hindi') return '🇮🇳 Hindi';
             if (l === 'Tamil') return '🇮🇳 Tamil';
             if (l === 'Telugu') return '🇮🇳 Telugu';
             if (l === 'Malayalam') return '🇮🇳 Malayalam';
             if (l === 'Kannada') return '🇮🇳 Kannada';
-            if (l === 'Japanese') return '🇯🇵 Japanese Audio';
-            if (l === 'English') return '🇬🇧 English';
+            if (l === 'Japanese') return '🇯🇵 Japanese';
             if (l === 'Korean') return '🇰🇷 Korean';
-            if (l === 'Dual-Audio') return '🌐 Dual-Audio';
-            if (l === 'Multi-Audio') return '🌐 Multi-Audio';
             return l;
         });
-        cardLines.push(`🌐 ${[...new Set(langTags)].join(' • ')}`);
+        const details = langNames.length > 0 ? ` [${[...new Set(langNames)].join(' • ')}]` : '';
+        displayLangs.push(`🌐 Multi-Audio${details}`);
+    } else if (parsed.isDualAudio || parsed.languages.includes('Dual-Audio') || nonGenericLangs.length === 2) {
+        const langNames = nonGenericLangs.map(l => {
+            if (l === 'English') return '🇬🇧 English';
+            if (l === 'Hindi') return '🇮🇳 Hindi';
+            if (l === 'Tamil') return '🇮🇳 Tamil';
+            if (l === 'Telugu') return '🇮🇳 Telugu';
+            if (l === 'Malayalam') return '🇮🇳 Malayalam';
+            if (l === 'Kannada') return '🇮🇳 Kannada';
+            if (l === 'Japanese') return '🇯🇵 Japanese';
+            if (l === 'Korean') return '🇰🇷 Korean';
+            return l;
+        });
+        const details = langNames.length > 0 ? ` [${[...new Set(langNames)].join(' + ')}]` : '';
+        displayLangs.push(`🌐 Dual-Audio${details}`);
+    } else if (nonGenericLangs.length > 0) {
+        nonGenericLangs.forEach(l => {
+            if (l === 'Hindi') displayLangs.push('🇮🇳 Hindi');
+            else if (l === 'Tamil') displayLangs.push('🇮🇳 Tamil');
+            else if (l === 'Telugu') displayLangs.push('🇮🇳 Telugu');
+            else if (l === 'Malayalam') displayLangs.push('🇮🇳 Malayalam');
+            else if (l === 'Kannada') displayLangs.push('🇮🇳 Kannada');
+            else if (l === 'Japanese') displayLangs.push('🇯🇵 Japanese');
+            else if (l === 'English') displayLangs.push('🇬🇧 English');
+            else if (l === 'Korean') displayLangs.push('🇰🇷 Korean');
+            else displayLangs.push(l);
+        });
+    } else {
+        displayLangs.push('🇬🇧 English');
+    }
+
+    // Include subtitle tags cleanly if present
+    if (parsed.subtitles && parsed.subtitles.length > 0) {
+        const subTags = parsed.subtitles.map(s => {
+            if (s === 'English') return '🇬🇧 Eng';
+            if (s === 'Hindi') return '🇮🇳 Hin';
+            return s;
+        });
+        displayLangs.push(`💬 Subs: ${[...new Set(subTags)].join(', ')}`);
+    }
+
+    if (displayLangs.length > 0) {
+        cardLines.push(`${[...new Set(displayLangs)].join(' • ')}`);
     }
 
     // Line 4: Media Specs Row (File Size, Seeders, Release Group, Providers)

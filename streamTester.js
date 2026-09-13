@@ -221,7 +221,9 @@ function isStreamMatchingTarget(stream, target) {
 
 function parseStreamMetadata(stream) {
     if (!stream) return {};
-    const ingested = ingestStream(stream);
+    if (stream._preparsedMeta) return stream._preparsedMeta;
+    const target = stream._rawStream || stream;
+    const ingested = ingestStream(target);
     if (!ingested) return {};
     const parsed = ingested.parsed || {};
     return {
@@ -239,6 +241,7 @@ function parseStreamMetadata(stream) {
         channels: parsed.channels,
         languages: parsed.languages || [],
         languageFlags: parsed.languageFlags || [],
+        subtitles: parsed.subtitles || [],
         size: ingested.sizeFormatted,
         sizeBytes: ingested.sizeBytes,
         sizeGB: ingested.sizeBytes ? Math.round((ingested.sizeBytes / (1024 * 1024 * 1024)) * 100) / 100 : null,
@@ -363,8 +366,12 @@ function deduplicateAndMergeStreams(streams, enabled = true) {
 }
 
 function formatStreamLabels(stream, latency = 150, isP2P = false, isDead = false, showSeeders = true, config = {}) {
-    const ingested = ingestStream(stream, config);
+    const target = stream._rawStream || stream;
+    const ingested = ingestStream(target, config);
     if (!ingested) return { name: stream.name || 'Stream', title: stream.title || '' };
+    if (stream._preparsedMeta) {
+        ingested.parsed = { ...stream._preparsedMeta };
+    }
     if (isP2P) ingested.isP2P = true;
     return formatStreamCard(ingested, {
         latency,
@@ -472,6 +479,15 @@ async function testStream(stream, showSeeders = true, config = {}) {
     const originalName = stream.name || 'Stream';
     const providerName = cleanProviderName(originalName);
 
+    const rawSnapshot = stream._rawStream || {
+        name: stream.name,
+        title: stream.title,
+        filename: stream.behaviorHints?.filename
+    };
+    stream._rawStream = rawSnapshot;
+    const initialMeta = stream._preparsedMeta || parseStreamMetadata(rawSnapshot);
+    stream._preparsedMeta = initialMeta;
+
     // Normalize headers for players (ExoPlayer, Nuvio, Stremio)
     const customHeaders = {
         ...(stream.headers || {}),
@@ -498,7 +514,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: stream.latency,
             isDead: isDead,
             statusCategory: stream.statusCategory,
-            originalProvider: stream.originalProvider || providerName
+            originalProvider: stream.originalProvider || providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
     }
 
@@ -544,7 +562,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: p2pLatency,
             isDead: isDead,
             statusCategory: statusCategory,
-            originalProvider: providerName
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
     }
 
@@ -558,7 +578,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: 100,
             isDead: false,
             statusCategory: 'fast',
-            originalProvider: providerName
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
     }
 
@@ -571,7 +593,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: 99999,
             isDead: true,
             statusCategory: 'dead',
-            originalProvider: providerName
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
     }
 
@@ -603,7 +627,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: heuristicLatency,
             isDead: isDead,
             statusCategory: statusCategory,
-            originalProvider: providerName
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
     }
 
@@ -699,7 +725,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
                 latency: 99999,
                 isDead: true,
                 statusCategory: 'dead',
-                originalProvider: providerName
+                originalProvider: providerName,
+                _rawStream: rawSnapshot,
+                _preparsedMeta: initialMeta
             };
         }
 
@@ -713,7 +741,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: latency,
             isDead: false,
             statusCategory: statusCategory,
-            originalProvider: providerName
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
 
     } catch (err) {
@@ -725,7 +755,9 @@ async function testStream(stream, showSeeders = true, config = {}) {
             latency: 350,
             isDead: false,
             statusCategory: 'fast',
-            originalProvider: providerName
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
         };
     }
 }
@@ -754,7 +786,7 @@ function buildNuvioSceneFilename(meta, target = {}) {
         parts.push(`S${s}E${e}`);
     }
 
-    // 3. Resolution (2160p.UHD, 1080p, 720p)
+    // 3. Resolution (2160p.UHD, 1080p, 720p, 480p) - Only add if genuinely detected
     const res = (meta.resolution || '').toLowerCase();
     if (res.includes('4k') || res.includes('2160') || res.includes('uhd')) {
         parts.push('2160p.UHD');
@@ -762,21 +794,27 @@ function buildNuvioSceneFilename(meta, target = {}) {
         parts.push('1080p');
     } else if (res.includes('720') || res.includes('hd')) {
         parts.push('720p');
-    } else {
-        parts.push('1080p');
+    } else if (res.includes('480') || res.includes('sd')) {
+        parts.push('480p');
     }
 
-    // 4. Source / Quality (Remux, BluRay, WEB-DL, WEBRip)
+    // 4. Source / Quality (Remux, BluRay, WEB-DL, WEBRip, HDTV) - Only add if genuinely detected
     const qual = (meta.quality || '').toLowerCase();
     const isRemux = (meta.special && meta.special.includes('REMUX')) || qual.includes('remux');
     if (isRemux) {
         parts.push('Remux');
     } else if (qual.includes('bluray') || qual.includes('blu-ray') || qual.includes('bdrip')) {
         parts.push('BluRay');
+    } else if (qual.includes('web-dl') || qual.includes('webdl')) {
+        parts.push('WEB-DL');
     } else if (qual.includes('web-rip') || qual.includes('webrip')) {
         parts.push('WEBRip');
-    } else {
-        parts.push('WEB-DL');
+    } else if (qual.includes('hdtv')) {
+        parts.push('HDTV');
+    } else if (qual.includes('dvd')) {
+        parts.push('DVDRip');
+    } else if (qual.includes('cam')) {
+        parts.push('CAM');
     }
 
     // 5. Visual / HDR (DV, HDR10+, HDR10, HDR)
@@ -791,7 +829,7 @@ function buildNuvioSceneFilename(meta, target = {}) {
     else if (hasHDR10) parts.push('HDR10');
     else if (hasHDR) parts.push('HDR');
 
-    // 6. Codec (HEVC.x265, AVC.x264, AV1)
+    // 6. Codec (HEVC.x265, AVC.x264, AV1) - Only add if genuinely detected
     const codec = (meta.codec || '').toLowerCase();
     if (codec.includes('hevc') || codec.includes('265') || codec.includes('h265')) {
         parts.push('HEVC.x265');
@@ -799,8 +837,8 @@ function buildNuvioSceneFilename(meta, target = {}) {
         parts.push('AV1');
     } else if (codec.includes('avc') || codec.includes('264') || codec.includes('h264')) {
         parts.push('AVC.x264');
-    } else {
-        parts.push('HEVC.x265');
+    } else if (codec.includes('xvid')) {
+        parts.push('XviD');
     }
 
     // 7. Bit Depth
@@ -854,13 +892,18 @@ function buildNuvioSceneFilename(meta, target = {}) {
     }
 
     // 9. Languages
-    const langs = Array.isArray(meta.languages) ? meta.languages : [];
+    const langs = Array.isArray(meta.languages) ? meta.languages.filter(l => l !== 'Dual-Audio' && l !== 'Multi-Audio') : [];
+    if (meta.isMultiAudio || (meta.languages && meta.languages.includes('Multi-Audio')) || langs.length >= 3) {
+        parts.push('Multi');
+    } else if (meta.isDualAudio || (meta.languages && meta.languages.includes('Dual-Audio')) || langs.length === 2) {
+        parts.push('Dual.Audio');
+    }
     for (const lang of langs) {
         const l = String(lang).trim();
         if (l) parts.push(l);
     }
-    if (meta.isMultiAudio && !langs.some(l => /multi/i.test(l))) {
-        parts.push('Multi');
+    if (langs.length === 0 && !meta.isMultiAudio && !meta.isDualAudio) {
+        parts.push('English');
     }
 
     // 10. Release Group & Extension
@@ -1192,7 +1235,7 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
         }
 
         // Enrich behaviorHints.filename and clientResolve for Nuvio native and fusion badges
-        const meta = parseStreamMetadata(stremioStream);
+        const meta = s._preparsedMeta || parseStreamMetadata(s._rawStream || stremioStream);
         const synthFilename = buildNuvioSceneFilename(meta, config && config.target ? config.target : {});
 
         stremioStream.behaviorHints = {
@@ -1227,15 +1270,15 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
                         raw_title: synthFilename,
                         parsed_title: target.title || meta.cleanTitle || 'Video',
                         year: target.year ? parseInt(target.year, 10) : (meta.year || null),
-                        resolution: meta.resolution || '1080p',
+                        resolution: meta.resolution || null,
                         seasons: seasonNum ? [seasonNum] : [],
                         episodes: episodeNum ? [episodeNum] : [],
-                        quality: meta.quality || 'WEB-DL',
+                        quality: meta.quality || null,
                         hdr: Array.isArray(meta.hdr) && meta.hdr.length > 0 ? meta.hdr : [],
-                        codec: meta.codec || 'HEVC',
+                        codec: meta.codec || null,
                         audio: Array.isArray(meta.audio) && meta.audio.length > 0 ? meta.audio : [],
                         channels: meta.channels ? [String(meta.channels)] : [],
-                        languages: Array.isArray(meta.languages) && meta.languages.length > 0 ? meta.languages : [],
+                        languages: Array.isArray(meta.languages) && meta.languages.length > 0 ? meta.languages : (meta.isHindi ? ['Hindi'] : ['English']),
                         group: meta.releaseGroup || 'NUVIO',
                         network: null,
                         edition: meta.edition || null,
@@ -1249,6 +1292,11 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
                 }
             }
         };
+
+        // Clean up internal properties so they never leak into the response
+        delete stremioStream._rawStream;
+        delete stremioStream._preparsedMeta;
+        delete stremioStream._rawFilename;
 
         return stremioStream;
     });
@@ -1265,5 +1313,6 @@ module.exports = {
     getSeederScore,
     deduplicateAndMergeStreams,
     getStreamFingerprint,
-    normalizeTorrentHash
+    normalizeTorrentHash,
+    buildNuvioSceneFilename
 };

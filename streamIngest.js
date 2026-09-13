@@ -69,6 +69,15 @@ function extractCleanProvider(rawName) {
     return clean || 'Stream';
 }
 
+function stripFormattedCardNoise(text) {
+    if (!text || typeof text !== 'string') return '';
+    return text
+        .split('\n')
+        .filter(l => !/^[🎬💎🌐📦🟢🟡🔴🧲⚡⚙️🔗🏷️]/.test(l.trim()))
+        .join(' ')
+        .trim();
+}
+
 /**
  * Ingests and normalizes any stream into a standard AIOStreams Normalized Stream representation.
  * @param {object} stream - Original Stremio stream
@@ -78,11 +87,18 @@ function extractCleanProvider(rawName) {
 function ingestStream(stream, config = {}) {
     if (!stream || typeof stream !== 'object') return null;
 
-    const rawName = String(stream.name || '');
-    const rawTitle = String(stream.title || stream.description || stream.quality || '');
-    const behaviorFilename = stream.behaviorHints && typeof stream.behaviorHints.filename === 'string'
-        ? stream.behaviorHints.filename.trim()
-        : null;
+    // Use original unformatted stream snapshot if available
+    const rawName = stream._rawStream?.name || String(stream.name || '');
+    const rawTitle = stream._rawStream?.title || String(stream.title || stream.description || stream.quality || '');
+    
+    // Check if filename was synthetic or genuine
+    let behaviorFilename = stream._rawFilename || stream.rawFilename;
+    if (!behaviorFilename && stream.behaviorHints && typeof stream.behaviorHints.filename === 'string') {
+        const bhName = stream.behaviorHints.filename.trim();
+        if (!bhName.endsWith('-FLUX.mkv') && !bhName.endsWith('-NUVIO.mkv')) {
+            behaviorFilename = bhName;
+        }
+    }
 
     // 1. Separate filename lines from stats/indexer lines (Torrentio & Comet multi-line format)
     const titleLines = rawTitle.split('\n').map(l => l.trim()).filter(Boolean);
@@ -90,8 +106,8 @@ function ingestStream(stream, config = {}) {
     let statsLine = '';
 
     for (const line of titleLines) {
-        // Line containing size or seeders emoji or indexer
-        if (/(?:💾|👤|👥|🌱|⚙️|🌐|\[\s*\d+\s*(?:GB|MB|GiB|MiB)\s*\])/i.test(line)) {
+        // Line containing UI card emojis or size or seeders emoji or indexer
+        if (/^[🎬💎🌐📦🟢🟡🔴🧲⚡⚙️🔗🏷️]/.test(line) || /(?:💾|👤|👥|🌱|⚙️|🌐|\[\s*\d+\s*(?:GB|MB|GiB|MiB)\s*\])/i.test(line)) {
             statsLine += ` ${line}`;
         } else if (!candidateFilename && line.length > 5) {
             candidateFilename = line;
@@ -99,7 +115,8 @@ function ingestStream(stream, config = {}) {
     }
 
     if (!candidateFilename) {
-        candidateFilename = titleLines[0] || rawName.split('\n')[0] || 'Stream';
+        const cleanFirstLine = stripFormattedCardNoise(titleLines[0] || rawName.split('\n')[0] || '');
+        candidateFilename = cleanFirstLine || 'Stream';
     }
 
     // 2. Extract real file size (Bytes & Formatted)
@@ -153,9 +170,12 @@ function ingestStream(stream, config = {}) {
     }
 
     // 5. Parse release metadata using AIOStreams torrentParser
-    // Parse using candidate filename first, then enrich with full title and name text to capture multi-line metadata (e.g. Dolby Atmos, DDP 5.1, DV)
-    const parsed = parseTorrentTitle(candidateFilename);
-    const combinedText = `${candidateFilename} ${rawTitle} ${rawName}`;
+    // Clean card noise from rawTitle and candidateFilename so emojis/badges never re-parse
+    const cleanCand = stripFormattedCardNoise(candidateFilename);
+    const cleanTitle = stripFormattedCardNoise(rawTitle);
+    const parsed = parseTorrentTitle(cleanCand);
+
+    const combinedText = `${cleanCand} ${cleanTitle}`;
     const fullParsed = parseTorrentTitle(combinedText);
 
     if (!parsed.resolution && fullParsed.resolution) parsed.resolution = fullParsed.resolution;
@@ -163,7 +183,14 @@ function ingestStream(stream, config = {}) {
     if ((!parsed.hdr || parsed.hdr.length === 0) && fullParsed.hdr && fullParsed.hdr.length > 0) parsed.hdr = fullParsed.hdr;
     if (!parsed.dvProfile && fullParsed.dvProfile) parsed.dvProfile = fullParsed.dvProfile;
     if (!parsed.codec && fullParsed.codec) parsed.codec = fullParsed.codec;
-    if ((!parsed.audio || parsed.audio.length === 0) && fullParsed.audio && fullParsed.audio.length > 0) parsed.audio = fullParsed.audio;
+    if ((!parsed.audio || parsed.audio.length === 0) && fullParsed.audio && fullParsed.audio.length > 0) {
+        parsed.audio = fullParsed.audio;
+    } else if (fullParsed.audio && fullParsed.audio.length > 0) {
+        // Merge any additional audio tracks found without duplicates
+        for (const a of fullParsed.audio) {
+            if (!parsed.audio.includes(a)) parsed.audio.push(a);
+        }
+    }
     if (!parsed.channels && fullParsed.channels) parsed.channels = fullParsed.channels;
     if ((!parsed.languages || parsed.languages.length === 0) && fullParsed.languages && fullParsed.languages.length > 0) {
         parsed.languages = fullParsed.languages;
@@ -176,13 +203,16 @@ function ingestStream(stream, config = {}) {
     }
     if (!parsed.bitDepth && fullParsed.bitDepth) parsed.bitDepth = fullParsed.bitDepth;
     if (!parsed.releaseGroup && fullParsed.releaseGroup) parsed.releaseGroup = fullParsed.releaseGroup;
+    if (fullParsed.subtitles && fullParsed.subtitles.length > 0) {
+        parsed.subtitles = [...new Set([...(parsed.subtitles || []), ...fullParsed.subtitles])];
+    }
 
     // 6. Clean provider label
     const originalProvider = stream.originalProvider || stream.provider || extractCleanProvider(rawName);
 
     return {
         originalStream: stream,
-        rawFilename: candidateFilename,
+        rawFilename: cleanCand || candidateFilename,
         parsed: parsed,
         sizeBytes: sizeBytes,
         sizeFormatted: sizeFormatted,
@@ -194,7 +224,7 @@ function ingestStream(stream, config = {}) {
         providers: stream.providers && Array.isArray(stream.providers) ? stream.providers : [originalProvider],
         behaviorHints: {
             ...(stream.behaviorHints || {}),
-            filename: behaviorFilename || candidateFilename
+            filename: behaviorFilename || cleanCand || candidateFilename
         }
     };
 }

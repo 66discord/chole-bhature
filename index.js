@@ -412,7 +412,7 @@ const ADMIN_SETTINGS_FILE = isVercel
 let globalServerSettings = {
     globalEcoMode: process.env.GLOBAL_ECO_MODE !== undefined
         ? (process.env.GLOBAL_ECO_MODE === 'true' || process.env.GLOBAL_ECO_MODE === '1')
-        : true, // Universal: Enforced across all addon users (Default: Enabled)
+        : false, // Universal: Disabled by default for accurate live stream validation
     allowClientEcoOverride: false, // Strict server-wide enforcement (Admin page is universal)
     renderKeepAlive: true,
     renderPingUrl: process.env.RENDER_PING_URL || null,

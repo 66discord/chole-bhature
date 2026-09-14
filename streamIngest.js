@@ -119,6 +119,18 @@ function ingestStream(stream, config = {}) {
         candidateFilename = cleanFirstLine || 'Stream';
     }
 
+    // Fallback to URL filename if candidateFilename is still generic
+    if ((!candidateFilename || candidateFilename === 'Stream') && stream.url && typeof stream.url === 'string') {
+        try {
+            const u = new URL(stream.url);
+            const pathname = decodeURIComponent(u.pathname);
+            const lastSegment = pathname.split('/').filter(Boolean).pop();
+            if (lastSegment && /\.(mkv|mp4|avi|mov|ts|m3u8|webm)$/i.test(lastSegment)) {
+                candidateFilename = lastSegment;
+            }
+        } catch (e) {}
+    }
+
     // 2. Extract real file size (Bytes & Formatted)
     let sizeBytes = null;
     if (stream.behaviorHints && typeof stream.behaviorHints.videoSize === 'number' && stream.behaviorHints.videoSize > 0) {
@@ -213,6 +225,7 @@ function ingestStream(stream, config = {}) {
     return {
         originalStream: stream,
         rawFilename: cleanCand || candidateFilename,
+        originalTitle: cleanCand || candidateFilename,
         parsed: parsed,
         sizeBytes: sizeBytes,
         sizeFormatted: sizeFormatted,

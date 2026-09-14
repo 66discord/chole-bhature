@@ -3293,6 +3293,13 @@
                                         <span class="switch-slider"></span>
                                     </div>
                                 </label>
+                                <label class="filter-capsule" title="Include original torrent/file title in the stream card">
+                                    <span class="filter-capsule-text">📄 Original Title</span>
+                                    <div class="switch-toggle">
+                                        <input type="checkbox" id="includeOriginalTitle" checked onchange="onSettingChanged(); updateCardPreview();">
+                                        <span class="switch-slider"></span>
+                                    </div>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -4621,6 +4628,7 @@
             cleanTitles: true,
             showFileSize: true,
             showReleaseGroup: true,
+            includeOriginalTitle: true,
             renderEcoMode: true,
             vercelEcoMode: true,
             enableDoh: true,
@@ -4712,6 +4720,7 @@
             const showSize = document.getElementById('showFileSize')?.checked !== false;
             const showGroup = document.getElementById('showReleaseGroup')?.checked !== false;
             const showSeeds = document.getElementById('showSeeders')?.checked !== false;
+            const showOrig = document.getElementById('includeOriginalTitle')?.checked !== false;
 
             const line1Tags = ['4K UHD', 'REMUX', 'HEVC', '10-bit'];
             const line2Badges = ['Dolby Vision Profile 8', 'HDR10+', 'Dolby Atmos TrueHD 7.1'];
@@ -4734,6 +4743,10 @@
                     <div style="font-weight: 700; color: #f8fafc;">
                         🎬 Oppenheimer (2023) <span style="color: #94a3b8; font-weight: 600;">[${line1Tags.join(' • ')}]</span>
                     </div>
+                    ${showOrig ? `
+                    <div style="color: #94a3b8; font-size: 11px; font-family: monospace; word-break: break-all; opacity: 0.9;">
+                        📄 Oppenheimer.2023.2160p.UHD.BluRay.x265.10bit.TrueHD.7.1.Atmos.DV.HDR10+.REMUX-FraMeSToR.mkv
+                    </div>` : ''}
                     <div style="color: #38bdf8; font-size: 12px; font-weight: 600;">
                         💎 ${line2Badges.join(' • ')}
                     </div>
@@ -5279,6 +5292,7 @@
             const cleanTitlesEl = document.getElementById('cleanTitles');
             const showFileSizeEl = document.getElementById('showFileSize');
             const showReleaseGroupEl = document.getElementById('showReleaseGroup');
+            const includeOriginalTitleEl = document.getElementById('includeOriginalTitle');
             const vercelEcoModeEl = document.getElementById('vercelEcoMode');
             const renderEcoModeEl = document.getElementById('renderEcoMode');
             const enableDohEl = document.getElementById('enableDoh');
@@ -5301,6 +5315,7 @@
             if (cleanTitlesEl) settings.cleanTitles = cleanTitlesEl.checked;
             if (showFileSizeEl) settings.showFileSize = showFileSizeEl.checked;
             if (showReleaseGroupEl) settings.showReleaseGroup = showReleaseGroupEl.checked;
+            if (includeOriginalTitleEl) settings.includeOriginalTitle = includeOriginalTitleEl.checked;
 
             let isEcoModeActive = settings.vercelEcoMode !== false && settings.renderEcoMode !== false;
             if (renderEcoModeEl) isEcoModeActive = renderEcoModeEl.checked;
@@ -5393,6 +5408,7 @@
                 cleanTitles: settings.cleanTitles !== false,
                 showFileSize: settings.showFileSize !== false,
                 showReleaseGroup: settings.showReleaseGroup !== false,
+                includeOriginalTitle: settings.includeOriginalTitle !== false,
                 renderEcoMode: Boolean(settings.renderEcoMode !== false && settings.vercelEcoMode !== false),
                 vercelEcoMode: Boolean(settings.vercelEcoMode !== false && settings.renderEcoMode !== false),
                 enableDoh: settings.enableDoh !== false,
@@ -6672,6 +6688,7 @@
             if (cfg.cleanTitles !== undefined) settings.cleanTitles = Boolean(cfg.cleanTitles);
             if (cfg.showFileSize !== undefined) settings.showFileSize = Boolean(cfg.showFileSize);
             if (cfg.showReleaseGroup !== undefined) settings.showReleaseGroup = Boolean(cfg.showReleaseGroup);
+            if (cfg.includeOriginalTitle !== undefined) settings.includeOriginalTitle = Boolean(cfg.includeOriginalTitle);
             if (cfg.renderEcoMode !== undefined) settings.renderEcoMode = Boolean(cfg.renderEcoMode);
             if (cfg.vercelEcoMode !== undefined) settings.vercelEcoMode = Boolean(cfg.vercelEcoMode);
             if (cfg.renderEcoMode !== undefined && cfg.vercelEcoMode === undefined) settings.vercelEcoMode = settings.renderEcoMode;
@@ -6735,6 +6752,7 @@
             setCheck('cleanTitles', settings.cleanTitles !== false);
             setCheck('showFileSize', settings.showFileSize !== false);
             setCheck('showReleaseGroup', settings.showReleaseGroup !== false);
+            setCheck('includeOriginalTitle', settings.includeOriginalTitle !== false);
             
             const isEcoActiveVal = Boolean(settings.renderEcoMode === true || settings.vercelEcoMode === true);
             setCheck('renderEcoMode', isEcoActiveVal);

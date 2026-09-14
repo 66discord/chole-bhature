@@ -2041,6 +2041,7 @@ function createAddon(config) {
                 cleanTitles: config.cleanTitles !== false,
                 showFileSize: config.showFileSize !== false,
                 showReleaseGroup: config.showReleaseGroup !== false,
+                includeOriginalTitle: config.includeOriginalTitle !== false,
                 renderEcoMode: isEcoMode,
                 vercelEcoMode: isEcoMode,
                 debridProvider: config.debridProvider,

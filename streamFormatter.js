@@ -175,6 +175,16 @@ function formatStreamCard(ingested, options = {}) {
         cardLines.push(`🎬 ${titleHeaderParts.join(' ')}`);
     }
 
+    // Original Stream File Title (if enabled)
+    const rawTitleToDisplay = ingested.originalTitle || ingested.rawFilename;
+    if (config.includeOriginalTitle !== false && rawTitleToDisplay) {
+        const cleanRaw = String(rawTitleToDisplay).replace(/[🎬💎🌐📦🟢🟡🔴🧲⚡⚙️🔗🏷️]/g, '').trim();
+        const isGeneric = !cleanRaw || cleanRaw.toLowerCase() === 'stream' || cleanRaw.toLowerCase() === 'video';
+        if (!isGeneric) {
+            cardLines.push(`📄 ${cleanRaw}`);
+        }
+    }
+
     // Line 2: Visual & Audio Studio Badges
     const avBadges = [];
     if (parsed.hdr && parsed.hdr.length > 0) {

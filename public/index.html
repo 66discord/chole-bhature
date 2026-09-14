@@ -8403,9 +8403,18 @@
             }
 
             try {
-                const res = await fetch(`/api/telegram/status?bridgeUrl=${encodeURIComponent(bridgeUrl)}`);
-                const data = await res.json();
-                const isOnline = Boolean(data && (data.online || data.bridgeHealthy || data.success));
+                let isOnline = false;
+                let data = null;
+                try {
+                    const clientRes = await fetch(`${bridgeUrl.replace(/\/+$/, '')}/api/version`, { mode: 'cors' });
+                    data = await clientRes.json();
+                    isOnline = Boolean(data && (data.online || data.success || data.current_version));
+                    data.bridgeUrl = bridgeUrl;
+                } catch (clientErr) {
+                    const res = await fetch(`/api/telegram/status?bridgeUrl=${encodeURIComponent(bridgeUrl)}`);
+                    data = await res.json();
+                    isOnline = Boolean(data && (data.online || data.bridgeHealthy || data.success));
+                }
                 if (isOnline) {
                     triggerHaptic('success');
                     if (statusEl) {

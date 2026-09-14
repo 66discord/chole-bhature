@@ -236,9 +236,8 @@ async function searchPencariMovie(target = {}, config = {}) {
         };
         const payloadB64 = Buffer.from(JSON.stringify(payloadObj)).toString('base64url');
 
-        // Direct stream route served via Chole Bhature Express bridge
-        // Stremio / Nuvio connects to Chole Bhature's /stream/telegram route, which connects to the local/remote bridge daemon
-        const streamUrl = `${protocol}://${addonHost}/stream/telegram/${payloadB64}/${encodeURIComponent(fileName)}?bridgeUrl=${encodeURIComponent(bridgeUrl)}`;
+        // Direct stream route served via Telegram Bridge (No Addon Proxy)
+        const streamUrl = `${bridgeUrl}/api/download/${payloadB64}/${encodeURIComponent(fileName)}`;
 
         const sizeGb = fileSize ? (fileSize / (1024 * 1024 * 1024)).toFixed(2) : null;
         const sizeMb = fileSize ? (fileSize / (1024 * 1024)).toFixed(0) : null;

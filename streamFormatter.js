@@ -80,18 +80,81 @@ function formatStreamCard(ingested, options = {}) {
     }
 
     // 1. Build Header Line (stream.name)
+    const audioBadge = (() => {
+        const audioList = Array.isArray(parsed.audio) ? parsed.audio : [];
+        const hasAtmos = audioList.some(a => /atmos/i.test(a));
+        let base = null;
+        if (audioList.some(a => /truehd|true-hd/i.test(a))) base = 'TrueHD';
+        else if (audioList.some(a => /dts-hd\s*ma|dtshd\s*ma/i.test(a))) base = 'DTS-HD';
+        else if (audioList.some(a => /dts-x|dtsx/i.test(a))) base = 'DTS-X';
+        else if (audioList.some(a => /\bdts\b/i.test(a))) base = 'DTS';
+        else if (audioList.some(a => /ddp|dd\+|eac3/i.test(a))) base = 'DD+';
+        else if (audioList.some(a => /\bdd\b|ac3/i.test(a))) base = 'DD';
+        else if (audioList.some(a => /flac/i.test(a))) base = 'FLAC';
+        else if (audioList.some(a => /pcm|lpcm/i.test(a))) base = 'PCM';
+        else if (audioList.some(a => /aac/i.test(a))) base = 'AAC';
+        else if (audioList.some(a => /opus/i.test(a))) base = 'Opus';
+
+        let tag = '';
+        if (base && hasAtmos) tag = `${base} Atmos`;
+        else if (base) tag = base;
+        else if (hasAtmos) tag = 'Atmos';
+
+        if (!tag) return parsed.channels ? `Audio ${parsed.channels}` : null;
+        if (parsed.channels) return `${tag} ${parsed.channels}`;
+        return tag;
+    })();
+
+    const sizeTopBadge = (ingested.sizeFormatted && config.showFileSize !== false) ? `💾 ${ingested.sizeFormatted}` : null;
+    const imaxBadge = (parsed.special && (parsed.special.includes('IMAX Enhanced') || parsed.special.includes('IMAX'))) ? 'IMAX' : null;
+    const is3dBadge = (parsed.special && parsed.special.includes('3D')) ? '3D' : null;
+    const editionBadge = parsed.edition ? parsed.edition : null;
+    const repackBadge = (parsed.isRepack || (parsed.special && parsed.special.includes('REPACK'))) ? 'REPACK' : ((parsed.isProper || (parsed.special && parsed.special.includes('PROPER'))) ? 'PROPER' : null);
+
+    const bitDepthBadge = (parsed.bitDepth === '12-bit' || parsed.bitDepth === '12bit') ? '12bit' : ((parsed.bitDepth === '10bit' || parsed.bitDepth === '10-bit' || (parsed.special && parsed.special.some(s => /10bit|10-bit/i.test(s)))) ? '10bit' : null);
+    const hfrBadge = (parsed.special && parsed.special.includes('60fps')) ? '60fps' : null;
+
+    const codecBadge = (() => {
+        if (!parsed.codec) return null;
+        const c = parsed.codec.toUpperCase();
+        if (c === 'HEVC') return 'HEVC';
+        if (c === 'AV1') return 'AV1';
+        if (c === 'H.264' || c === 'AVC') return 'AVC';
+        if (c === 'VP9') return 'VP9';
+        if (c === 'VC-1') return 'VC-1';
+        return parsed.codec;
+    })();
+
+    const dvHdrBadges = [];
+    if (parsed.hdr && parsed.hdr.length > 0) {
+        parsed.hdr.forEach(h => {
+            if (h === 'Dolby Vision' && parsed.dvProfile) {
+                dvHdrBadges.push(`Dolby Vision ${parsed.dvProfile}`);
+            } else {
+                dvHdrBadges.push(h);
+            }
+        });
+    }
+
     const topBadges = [
         debridBadge,
         parsed.resolution === '2160p' ? '4K UHD' : (parsed.resolution === '1080p' ? '1080p FHD' : (parsed.resolution === '720p' ? '720p HD' : parsed.resolution)),
-        ...parsed.hdr,
+        ...dvHdrBadges,
+        imaxBadge,
+        is3dBadge,
         parsed.special.includes('REMUX') ? 'REMUX' : (parsed.quality || null),
-        parsed.audio.includes('Dolby Atmos') ? 'Atmos' : (parsed.audio.includes('TrueHD') ? 'TrueHD' : (parsed.audio.includes('DTS-HD MA') ? 'DTS-HD' : (parsed.audio.includes('DDP') ? 'DDP' : null))),
-        parsed.channels || null,
+        editionBadge,
+        repackBadge,
+        codecBadge,
+        bitDepthBadge,
+        hfrBadge,
+        audioBadge,
+        sizeTopBadge,
         langTopBadge
     ].filter(Boolean);
 
     const uniqueTopBadges = [...new Set(topBadges)];
-    const topBadgeStr = uniqueTopBadges.length > 0 ? ` • ${uniqueTopBadges.slice(0, 6).join(' • ')}` : '';
+    const topBadgeStr = uniqueTopBadges.length > 0 ? ` • ${uniqueTopBadges.slice(0, 10).join(' • ')}` : '';
 
     let nameLine = '';
     if (isDead) {
@@ -164,6 +227,8 @@ function formatStreamCard(ingested, options = {}) {
         parsed.resolution ? (parsed.resolution === '2160p' ? '4K UHD' : parsed.resolution === '1080p' ? '1080p FHD' : parsed.resolution === '720p' ? '720p HD' : parsed.resolution) : null,
         parsed.special.includes('REMUX') ? 'REMUX' : (parsed.quality || null),
         parsed.special.includes('IMAX Enhanced') ? 'IMAX Enhanced' : (parsed.special.includes('IMAX') ? 'IMAX' : null),
+        (parsed.special && parsed.special.includes('3D')) ? '3D' : null,
+        parsed.edition || null,
         parsed.codec || null,
         parsed.bitDepth || null
     ].filter(Boolean);
@@ -187,6 +252,17 @@ function formatStreamCard(ingested, options = {}) {
 
     // Line 2: Visual & Audio Studio Badges
     const avBadges = [];
+    if (parsed.special && parsed.special.includes('IMAX Enhanced')) {
+        avBadges.push('IMAX Enhanced');
+    } else if (parsed.special && parsed.special.includes('IMAX')) {
+        avBadges.push('IMAX');
+    }
+    if (parsed.special && parsed.special.includes('3D')) {
+        avBadges.push('3D');
+    }
+    if (parsed.edition) {
+        avBadges.push(parsed.edition);
+    }
     if (parsed.hdr && parsed.hdr.length > 0) {
         parsed.hdr.forEach(h => {
             if (h === 'Dolby Vision' && parsed.dvProfile) avBadges.push(`Dolby Vision ${parsed.dvProfile}`);
@@ -194,7 +270,7 @@ function formatStreamCard(ingested, options = {}) {
         });
     }
     if (parsed.audio && parsed.audio.length > 0) {
-        const audioStr = parsed.audio.join(' + ');
+        const audioStr = parsed.audio.map(a => a === 'DDP' ? 'DD+' : a).join(' + ');
         const chanStr = parsed.channels ? ` ${parsed.channels}` : '';
         avBadges.push(`${audioStr}${chanStr}`);
     } else if (parsed.channels) {
@@ -269,7 +345,7 @@ function formatStreamCard(ingested, options = {}) {
     // Line 4: Media Specs Row (File Size, Seeders, Release Group, Providers)
     const metaRow = [];
     if (ingested.sizeFormatted && config.showFileSize !== false) {
-        metaRow.push(`📦 ${ingested.sizeFormatted}`);
+        metaRow.push(`💾 ${ingested.sizeFormatted}`);
     }
     if (seederBadge && config.showSeeders !== false) {
         metaRow.push(seederBadge);

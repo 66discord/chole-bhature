@@ -214,6 +214,9 @@ function ingestStream(stream, config = {}) {
         parsed.special = fullParsed.special;
     }
     if (!parsed.bitDepth && fullParsed.bitDepth) parsed.bitDepth = fullParsed.bitDepth;
+    if (!parsed.edition && fullParsed.edition) parsed.edition = fullParsed.edition;
+    if (fullParsed.isRepack) parsed.isRepack = true;
+    if (fullParsed.isProper) parsed.isProper = true;
     if (!parsed.releaseGroup && fullParsed.releaseGroup) parsed.releaseGroup = fullParsed.releaseGroup;
     if (fullParsed.subtitles && fullParsed.subtitles.length > 0) {
         parsed.subtitles = [...new Set([...(parsed.subtitles || []), ...fullParsed.subtitles])];

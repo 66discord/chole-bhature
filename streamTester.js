@@ -365,6 +365,19 @@ function deduplicateAndMergeStreams(streams, enabled = true) {
     return result;
 }
 
+function parseStreamMetadata(stream) {
+    if (!stream) return {};
+    if (stream.parsed) return stream.parsed;
+    if (stream._preparsedMeta) return stream._preparsedMeta;
+    const text = [
+        stream.title || '',
+        stream.name || '',
+        stream.behaviorHints?.filename || '',
+        stream.description || ''
+    ].filter(Boolean).join(' ');
+    return parseTorrentTitle(text);
+}
+
 function formatStreamLabels(stream, latency = 150, isP2P = false, isDead = false, showSeeders = true, config = {}) {
     const target = stream._rawStream || stream;
     const ingested = ingestStream(target, config);
@@ -601,12 +614,15 @@ async function testStream(stream, showSeeders = true, config = {}) {
 
     // Handle Telegram cloud streams
     if (stream.url && (stream.url.includes('/stream/telegram') || stream.provider === 'Telegram' || providerName.toLowerCase().includes('telegram'))) {
-        const labels = formatStreamLabels(stream, 120, false, false, showSeeders, config);
+        const tgLatency = (typeof stream.latency === 'number' && stream.latency > 0) 
+            ? stream.latency 
+            : ((config && config.telegramBridgePing) ? config.telegramBridgePing : 45);
+        const labels = formatStreamLabels(stream, tgLatency, false, false, showSeeders, config);
         return {
             ...stream,
             name: labels.name,
             title: labels.title,
-            latency: 120,
+            latency: tgLatency,
             isDead: false,
             statusCategory: 'fast',
             originalProvider: providerName,
@@ -689,8 +705,121 @@ async function testStream(stream, showSeeders = true, config = {}) {
             }
         }
 
-        // Check for explicitly dead test routes or dead links
-        if (stream.url.includes('/dead_404') || stream.url.includes('/dead_403') || stream.url.includes('/dead_500')) {
+        // Direct per-stream real-time latency & health probe
+        let latency = 0;
+        let isDead = false;
+
+        try {
+            // 1. Primary probe: Direct HEAD request to stream.url
+            const res = await axios.head(stream.url, {
+                timeout: TIMEOUT_MS,
+                headers: probeHeaders,
+                httpAgent: dohHttpAgent,
+                httpsAgent: dohHttpsAgent,
+                validateStatus: () => true,
+                maxRedirects: 3
+            });
+
+            if (res.status === 404 || res.status === 410 || res.status >= 500) {
+                isDead = true;
+                latency = 99999;
+            } else if (res.status === 403) {
+                // If HEAD returns 403, verify with GET Range before assuming dead
+                try {
+                    const rangeRes = await axios.get(stream.url, {
+                        timeout: TIMEOUT_MS,
+                        headers: { ...probeHeaders, 'Range': 'bytes=0-10' },
+                        httpAgent: dohHttpAgent,
+                        httpsAgent: dohHttpsAgent,
+                        validateStatus: () => true,
+                        maxRedirects: 3
+                    });
+                    if (rangeRes.status === 404 || rangeRes.status === 410 || rangeRes.status >= 500) {
+                        isDead = true;
+                        latency = 99999;
+                    } else if (rangeRes.status === 403) {
+                        // Both HEAD and GET Range returned 403: verify if server origin is reachable
+                        try {
+                            await axios.head(origin, {
+                                timeout: TIMEOUT_MS,
+                                headers: probeHeaders,
+                                httpAgent: dohHttpAgent,
+                                httpsAgent: dohHttpsAgent,
+                                validateStatus: (status) => status >= 200 && status < 400
+                            });
+                            latency = Math.max(45, Date.now() - startTime);
+                        } catch (oErr) {
+                            isDead = true;
+                            latency = 99999;
+                        }
+                    } else {
+                        latency = Math.max(35, Date.now() - startTime);
+                    }
+                } catch (rErr) {
+                    if (rErr.code === 'ECONNREFUSED' || rErr.code === 'ENOTFOUND') {
+                        isDead = true;
+                        latency = 99999;
+                    } else {
+                        latency = 850;
+                    }
+                }
+            } else {
+                latency = Math.max(35, Date.now() - startTime);
+            }
+        } catch (headErr) {
+            // HEAD rejected or connection error -> fallback to GET Range probe
+            try {
+                const getRes = await axios.get(stream.url, {
+                    timeout: TIMEOUT_MS,
+                    headers: { ...probeHeaders, 'Range': 'bytes=0-10' },
+                    httpAgent: dohHttpAgent,
+                    httpsAgent: dohHttpsAgent,
+                    validateStatus: () => true,
+                    maxRedirects: 3
+                });
+
+                if (getRes.status === 404 || getRes.status === 410 || getRes.status >= 500) {
+                    isDead = true;
+                    latency = 99999;
+                } else if (getRes.status === 403) {
+                    try {
+                        await axios.head(origin, {
+                            timeout: TIMEOUT_MS,
+                            headers: probeHeaders,
+                            httpAgent: dohHttpAgent,
+                            httpsAgent: dohHttpsAgent,
+                            validateStatus: (status) => status >= 200 && status < 400
+                        });
+                        latency = Math.max(50, Date.now() - startTime);
+                    } catch (oErr) {
+                        isDead = true;
+                        latency = 99999;
+                    }
+                } else {
+                    latency = Math.max(45, Date.now() - startTime);
+                }
+            } catch (getErr) {
+                if (getErr.code === 'ECONNREFUSED' || getErr.code === 'ENOTFOUND') {
+                    isDead = true;
+                    latency = 99999;
+                } else {
+                    try {
+                        await axios.head(origin, {
+                            timeout: TIMEOUT_MS,
+                            headers: probeHeaders,
+                            httpAgent: dohHttpAgent,
+                            httpsAgent: dohHttpsAgent,
+                            validateStatus: (status) => status < 500
+                        });
+                        latency = Math.max(60, Date.now() - startTime);
+                    } catch (oErr) {
+                        latency = 850;
+                    }
+                }
+            }
+        }
+
+        if (isDead || latency >= 90000) {
             const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
             return {
                 ...stream,
@@ -703,50 +832,6 @@ async function testStream(stream, showSeeders = true, config = {}) {
                 _rawStream: rawSnapshot,
                 _preparsedMeta: initialMeta
             };
-        }
-
-        // Standard real-time latency probe (from v4.0.0)
-        let latency = 0;
-        try {
-            await axios.head(origin, {
-                timeout: TIMEOUT_MS,
-                headers: probeHeaders,
-                httpAgent: dohHttpAgent,
-                httpsAgent: dohHttpsAgent,
-                validateStatus: (status) => status < 500
-            });
-            latency = Math.max(35, Date.now() - startTime);
-        } catch (e) {
-            try {
-                const getRes = await axios.get(stream.url, {
-                    timeout: TIMEOUT_MS,
-                    headers: { 
-                        ...probeHeaders,
-                        'Range': 'bytes=0-10'
-                    },
-                    httpAgent: dohHttpAgent,
-                    httpsAgent: dohHttpsAgent,
-                    validateStatus: (status) => status < 500
-                });
-                if (getRes.status === 404 || getRes.status === 410) {
-                    const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
-                    return {
-                        ...stream,
-                        name: labels.name,
-                        title: labels.title,
-                        latency: 99999,
-                        isDead: true,
-                        statusCategory: 'dead',
-                        originalProvider: providerName,
-                        _rawStream: rawSnapshot,
-                        _preparsedMeta: initialMeta
-                    };
-                }
-                latency = Math.max(45, Date.now() - startTime);
-            } catch (e2) {
-                // Probe blocked by CDN bot-filter, but video still streamable in player
-                latency = 850;
-            }
         }
 
         const statusCategory = latency < 800 ? 'fast' : 'slow';
@@ -835,19 +920,43 @@ function buildNuvioSceneFilename(meta, target = {}) {
         parts.push('CAM');
     }
 
-    // 5. Visual / HDR (DV, HDR10+, HDR10, HDR)
+    // 4b. Edition (Extended, Directors.Cut, Unrated, Criterion)
+    if (meta.edition) {
+        const edToken = meta.edition.replace(/['\s]+/g, '.');
+        parts.push(edToken);
+    }
+
+    // 4c. Proper / Repack
+    if (meta.isRepack || (meta.special && meta.special.includes('REPACK'))) {
+        parts.push('REPACK');
+    } else if (meta.isProper || (meta.special && meta.special.includes('PROPER'))) {
+        parts.push('PROPER');
+    }
+
+    // 5. Visual / HDR / IMAX / 3D (IMAX, 3D, DV, Profile, HDR10+, HDR10, HDR, HLG, SDR)
     const hdrList = Array.isArray(meta.hdr) ? meta.hdr.map(h => String(h).toLowerCase()) : [];
     const hasDV = hdrList.some(h => h.includes('vision') || h.includes('dv') || h.includes('dovi'));
     const hasHDR10Plus = hdrList.some(h => h.includes('hdr10+') || h.includes('hdr10plus') || h.includes('hdr10 plus'));
     const hasHDR10 = hdrList.some(h => h.includes('hdr10') && !h.includes('+') && !h.includes('plus'));
+    const hasHLG = hdrList.some(h => h.includes('hlg'));
+    const hasSDR = hdrList.some(h => h.includes('sdr'));
     const hasHDR = hdrList.some(h => h.includes('hdr')) || hasHDR10Plus || hasHDR10;
+    const isIMAX = (meta.special && meta.special.some(s => /imax/i.test(s)));
+    const is3D = (meta.special && meta.special.some(s => /\b3d\b/i.test(s)));
 
-    if (hasDV) parts.push('DV');
+    if (isIMAX) parts.push('IMAX');
+    if (is3D) parts.push('3D');
+    if (hasDV) {
+        parts.push('DV');
+        if (meta.dvProfile) parts.push(meta.dvProfile.replace(/\s+/g, '.'));
+    }
     if (hasHDR10Plus) parts.push('HDR10+');
     else if (hasHDR10) parts.push('HDR10');
     else if (hasHDR) parts.push('HDR');
+    else if (hasHLG) parts.push('HLG');
+    else if (hasSDR) parts.push('SDR');
 
-    // 6. Codec (HEVC.x265, AVC.x264, AV1) - Only add if genuinely detected
+    // 6. Codec (HEVC.x265, AVC.x264, AV1, VP9, VC-1) - Only add if genuinely detected
     const codec = (meta.codec || '').toLowerCase();
     if (codec.includes('hevc') || codec.includes('265') || codec.includes('h265')) {
         parts.push('HEVC.x265');
@@ -855,13 +964,18 @@ function buildNuvioSceneFilename(meta, target = {}) {
         parts.push('AV1');
     } else if (codec.includes('avc') || codec.includes('264') || codec.includes('h264')) {
         parts.push('AVC.x264');
+    } else if (codec.includes('vp9')) {
+        parts.push('VP9');
+    } else if (codec.includes('vc1') || codec.includes('vc-1')) {
+        parts.push('VC-1');
     } else if (codec.includes('xvid')) {
         parts.push('XviD');
     }
 
     // 7. Bit Depth
-    if (meta.bitDepth || (meta.special && meta.special.some(s => /10bit|10-bit/i.test(s)))) {
-        parts.push('10bit');
+    if (meta.bitDepth || (meta.special && meta.special.some(s => /10bit|10-bit|12bit|12-bit/i.test(s)))) {
+        const bd = (meta.bitDepth && meta.bitDepth.includes('12')) ? '12bit' : '10bit';
+        parts.push(bd);
     }
 
     // 8. Audio Codec & Channels
@@ -876,16 +990,18 @@ function buildNuvioSceneFilename(meta, target = {}) {
     const hasDTS = audioList.some(a => a.includes('dts') && !hasDtsX && !hasDtsHd && !hasDtsHdMa);
     const hasAAC = audioList.some(a => a.includes('aac'));
     const hasFLAC = audioList.some(a => a.includes('flac'));
+    const hasPCM = audioList.some(a => a.includes('pcm') || a.includes('lpcm'));
 
     let audioToken = '';
     if (hasTrueHD) audioToken = 'TrueHD';
-    else if (hasDDP) audioToken = 'DDP';
+    else if (hasDDP) audioToken = 'DD+';
     else if (hasDD) audioToken = 'DD';
     else if (hasDtsX) audioToken = 'DTS-X';
     else if (hasDtsHdMa) audioToken = 'DTS-HD.MA';
     else if (hasDtsHd) audioToken = 'DTS-HD';
     else if (hasDTS) audioToken = 'DTS';
     else if (hasFLAC) audioToken = 'FLAC';
+    else if (hasPCM) audioToken = 'PCM';
     else if (hasAAC) audioToken = 'AAC';
 
     const channels = meta.channels ? String(meta.channels) : null;

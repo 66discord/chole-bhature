@@ -50,8 +50,8 @@ function cleanReleaseNoise(title) {
     if (!title || typeof title !== 'string') return '';
     let cleaned = title.trim();
 
-    // Strip common file extensions
-    cleaned = cleaned.replace(/\.(mkv|mp4|avi|mov|ts|m2ts|webm|iso|vob)$/i, '');
+    // Strip common file extensions (including split multi-part extensions like .mkv.001, .mkv.002)
+    cleaned = cleaned.replace(/\.(mkv|mp4|avi|mov|ts|m2ts|webm|iso|vob)(?:\.0*\d+)?$/i, '');
 
     // Strip prepended website domains like "www.movies.com - " or "[TGx] "
     cleaned = cleaned.replace(/^(?:\[[^\]]+\]|\([^\)]+\)|\w+:\/\/[^\s]+|www\.[a-z0-9.-]+\.[a-z]{2,4}[\s._-]*)/i, (m) => {
@@ -214,12 +214,18 @@ function extractAllAttributes(text, originalRaw) {
         res.hdr.push('Dolby Vision');
         if (hasHDR10Plus) res.hdr.push('HDR10+');
         else if (hasHDR10) res.hdr.push('HDR10');
+        else if (hasHDR) res.hdr.push('HDR');
     } else if (hasHDR10Plus) {
         res.hdr.push('HDR10+');
     } else if (hasHDR10) {
         res.hdr.push('HDR10');
     } else if (hasHDR) {
         res.hdr.push('HDR');
+    }
+    if (/\bhlg\b/i.test(text)) {
+        res.hdr.push('HLG');
+    } else if (/\bsdr\b/i.test(text) && res.hdr.length === 0) {
+        res.hdr.push('SDR');
     }
 
     // IMAX Enhanced / IMAX
@@ -229,8 +235,19 @@ function extractAllAttributes(text, originalRaw) {
         res.special.push('IMAX');
     }
 
+    // 3D / HFR / High Frame Rate
+    if (/\b(?:3d|half[\s._-]?sbs|hsbs|half[\s._-]?ou|hou)\b/i.test(text)) {
+        res.special.push('3D');
+    }
+    if (/\b(?:60fps|59\.94fps|120fps|hfr)\b/i.test(text)) {
+        res.special.push('60fps');
+    }
+
     // Bit depth
-    if (/\b10[\s._-]?bit\b/i.test(text) || /\bhevc[\s._-]?10\b/i.test(text) || /\bhi10p\b/i.test(text)) {
+    if (/\b12[\s._-]?bit\b/i.test(text)) {
+        res.bitDepth = '12-bit';
+        res.special.push('12-bit');
+    } else if (/\b10[\s._-]?bit\b/i.test(text) || /\bhevc[\s._-]?10\b/i.test(text) || /\bhi10p\b/i.test(text)) {
         res.bitDepth = '10-bit';
         res.special.push('10-bit');
     }
@@ -239,6 +256,8 @@ function extractAllAttributes(text, originalRaw) {
     if (/\b(?:hevc|h[\s._-]?265|x265)\b/i.test(text)) res.codec = 'HEVC';
     else if (/\b(?:avc|h[\s._-]?264|x264)\b/i.test(text)) res.codec = 'H.264';
     else if (/\b(?:av1|av01)\b/i.test(text)) res.codec = 'AV1';
+    else if (/\bvp9\b/i.test(text)) res.codec = 'VP9';
+    else if (/\b(?:vc-?1)\b/i.test(text)) res.codec = 'VC-1';
     else if (/\b(?:xvid|divx)\b/i.test(text)) res.codec = 'XviD';
 
     // 6. Audio Codecs & Formats (Capture ALL audio tracks present, e.g. Hindi DDP + English DTS-HD)
@@ -257,6 +276,7 @@ function extractAllAttributes(text, originalRaw) {
     const hasFLAC = /\bflac\b/i.test(text);
     const hasAAC = /\baac(?:\d(?:\.\d)?)?\b/i.test(text);
     const hasOpus = /\bopus\b/i.test(text);
+    const hasPCM = /\b(?:lpcm|pcm)\b/i.test(text);
 
     if (hasAtmos) res.audio.push('Dolby Atmos');
     if (hasTrueHD) res.audio.push('TrueHD');
@@ -266,6 +286,7 @@ function extractAllAttributes(text, originalRaw) {
     if (hasDDP) res.audio.push('DDP');
     else if (hasDD) res.audio.push('DD');
     if (hasFLAC) res.audio.push('FLAC');
+    if (hasPCM) res.audio.push('PCM');
     if (hasAAC && res.audio.length === 0) res.audio.push('AAC');
     else if (hasOpus && res.audio.length === 0) res.audio.push('Opus');
 

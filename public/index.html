@@ -2905,11 +2905,12 @@
                                 <span style="font-size: 11px; color: var(--text-tertiary);">Default: <code>http://127.0.0.1:8088</code></span>
                             </div>
                             <div style="display: flex; gap: 8px; width: 100%;">
-                                <input type="text" id="telegramBridgeUrl" placeholder="http://127.0.0.1:8088" value="http://127.0.0.1:8088" onchange="onSettingChanged()" style="flex: 1; font-family: monospace; font-size: 13px;">
+                                <input type="text" id="telegramBridgeUrl" placeholder="http://127.0.0.1:8088" value="http://127.0.0.1:8088" oninput="onTelegramUrlInput()" onchange="onSettingChanged()" style="flex: 1; font-family: monospace; font-size: 13px;">
                                 <button type="button" class="pill-btn pill-btn-emerald" id="btn-test-telegram" onclick="testTelegramBridge()" style="white-space: nowrap; padding: 0 18px; font-size: 12px; font-weight: 700; border-radius: 10px;">
                                     <span>📡</span> Test Daemon
                                 </button>
                             </div>
+                            <div id="telegram-bridge-saved-badge" style="display: none; font-size: 11.5px; padding: 6px 12px; border-radius: 6px; margin-top: 2px; align-items: center; gap: 6px; flex-wrap: wrap; line-height: 1.4;"></div>
                             <div id="telegram-bridge-status" style="font-size: 12px; display: none; padding: 8px 12px; border-radius: 8px;"></div>
                             <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
                                 💡 <b>How it works:</b> Direct high-speed MTProto streaming via local daemon (<code>http://127.0.0.1:8088</code>), Termux Android service, or remote tunnel. If the daemon is offline, streams automatically play via web player fallback. Need help? Click <a href="#" onclick="showTelegramTutorialModal(); return false;" style="color: #38bdf8; text-decoration: underline;">Setup Guide</a>.
@@ -5355,12 +5356,17 @@
             const enableTelegramEl = document.getElementById('enableTelegram');
             if (enableTelegramEl) settings.enableTelegram = enableTelegramEl.checked;
             const telegramBridgeUrlEl = document.getElementById('telegramBridgeUrl');
-            if (telegramBridgeUrlEl) settings.telegramBridgeUrl = telegramBridgeUrlEl.value.trim();
+            if (telegramBridgeUrlEl) {
+                const val = telegramBridgeUrlEl.value.trim();
+                settings.telegramBridgeUrl = val || 'http://127.0.0.1:8088';
+                if (val) localStorage.setItem('cb_telegram_bridge_url', val);
+            }
 
             settings.prioritizeQuality = (settings.sortBy === 'quality');
             settings.preferredLanguages = settings.preferredLanguages || [];
             settings.prioritizeHindi = settings.preferredLanguages.includes('Hindi');
             localStorage.setItem('nuvio_settings', JSON.stringify(settings));
+            if (typeof updateTelegramSavedIndicator === 'function') updateTelegramSavedIndicator();
         }
 
         function updateStatsBar() {
@@ -5445,7 +5451,10 @@
             saveSettingsLocal();
             const configObj = buildConfigObject();
             const activeToken = encodeConfigToken(configObj);
-            const targetId = configId || activeToken;
+            const isBase64Token = (id) => typeof id === 'string' && id.length > 32;
+            const targetId = (!configId || isBase64Token(configId)) ? activeToken : configId;
+            configId = targetId;
+            try { localStorage.setItem('cb_config_id', targetId); } catch (_) {}
             
             try {
                 const res = await fetch('/api/config/save', {
@@ -6735,8 +6744,12 @@
             if (cfg.xtreamServer !== undefined) settings.xtreamServer = cfg.xtreamServer;
             if (cfg.xtreamUser !== undefined) settings.xtreamUser = cfg.xtreamUser;
             if (cfg.xtreamPassword !== undefined) settings.xtreamPassword = cfg.xtreamPassword;
-            if (cfg.enableTelegram !== undefined) settings.enableTelegram = Boolean(cfg.enableTelegram);
+            settings.enableTelegram = Boolean(cfg && cfg.enableTelegram === true);
             if (cfg.telegramBridgeUrl !== undefined) settings.telegramBridgeUrl = cfg.telegramBridgeUrl;
+            const persistedBridgeUrl = localStorage.getItem('cb_telegram_bridge_url');
+            if (persistedBridgeUrl && (!cfg.telegramBridgeUrl || cfg.telegramBridgeUrl === 'http://127.0.0.1:8088')) {
+                settings.telegramBridgeUrl = persistedBridgeUrl;
+            }
             
             localStorage.setItem('nuvio_settings', JSON.stringify(settings));
             
@@ -6771,6 +6784,7 @@
             setCheck('enableTelegram', Boolean(settings.enableTelegram));
             setVal('telegramBridgeUrl', settings.telegramBridgeUrl || 'http://127.0.0.1:8088');
             toggleTelegramSubsections();
+            if (typeof updateTelegramSavedIndicator === 'function') updateTelegramSavedIndicator();
 
             setCheck('enableIptv', settings.enableIptv !== false);
             setCheck('enableCuratedIptv', Boolean(settings.enableCuratedIptv));
@@ -6959,10 +6973,17 @@
             if (storedConfigId) {
                 const localDecoded = decodeConfigToken(storedConfigId);
                 if (localDecoded) {
-                    loadConfigIntoUI(localDecoded);
+                    const customBridge = localStorage.getItem('cb_telegram_bridge_url');
+                    const merged = { ...localDecoded, ...settings };
+                    if (customBridge) {
+                        merged.telegramBridgeUrl = customBridge;
+                        settings.telegramBridgeUrl = customBridge;
+                    }
+                    loadConfigIntoUI(merged);
                     showSyncBadge(`ID: ${configId}`);
                     updateActionBtnUI();
                     initAdminVisibility();
+                    if (typeof updateTelegramSavedIndicator === 'function') updateTelegramSavedIndicator();
                     return;
                 }
             }
@@ -8366,13 +8387,92 @@
             if (modal) modal.style.display = 'none';
         }
 
+        function isValidBridgeUrl(url) {
+            if (!url || typeof url !== 'string') return false;
+            try {
+                const u = new URL(url.trim());
+                return (u.protocol === 'http:' || u.protocol === 'https:') && Boolean(u.hostname);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function onTelegramUrlInput() {
+            const input = document.getElementById('telegramBridgeUrl');
+            if (input) {
+                const val = input.value.trim();
+                settings.telegramBridgeUrl = val || 'http://127.0.0.1:8088';
+                if (val) localStorage.setItem('cb_telegram_bridge_url', val);
+                const onlineUrl = localStorage.getItem('cb_telegram_bridge_online_url');
+                if (val !== onlineUrl) {
+                    localStorage.setItem('cb_telegram_bridge_last_status', 'untested');
+                }
+                updateTelegramSavedIndicator();
+            }
+        }
+
+        function updateTelegramSavedIndicator() {
+            const badge = document.getElementById('telegram-bridge-saved-badge');
+            if (!badge) return;
+            const input = document.getElementById('telegramBridgeUrl');
+            const url = (input ? input.value.trim() : '') || settings.telegramBridgeUrl || localStorage.getItem('cb_telegram_bridge_url') || '';
+            
+            if (!url) {
+                badge.style.display = 'none';
+                return;
+            }
+
+            const cleanUrl = String(url).replace(/[<>"']/g, '');
+            const onlineUrl = localStorage.getItem('cb_telegram_bridge_online_url');
+            const lastStatus = localStorage.getItem('cb_telegram_bridge_last_status') || 'untested';
+            const ping = localStorage.getItem('cb_telegram_bridge_ping');
+
+            if (!isValidBridgeUrl(url)) {
+                badge.style.display = 'inline-flex';
+                badge.style.background = 'rgba(239, 68, 68, 0.12)';
+                badge.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+                badge.style.color = '#f87171';
+                badge.innerHTML = `<span>⚠️</span> <span><b>Invalid URL format:</b> Must start with <code>http://</code> or <code>https://</code></span>`;
+                return;
+            }
+
+            // ONLY GREEN IF IT IS CONFIRMED ONLINE & CORRECT
+            if (onlineUrl && onlineUrl === url && lastStatus === 'online') {
+                badge.style.display = 'inline-flex';
+                badge.style.background = 'rgba(16, 185, 129, 0.12)';
+                badge.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+                badge.style.color = '#34d399';
+                const pingHtml = ping ? `<span style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(16, 185, 129, 0.4); padding: 1px 6px; border-radius: 5px; font-weight: 800; font-family: monospace; font-size: 11px; margin-left: 4px;">⚡ ${ping}ms</span>` : '';
+                badge.innerHTML = `<span>🟢</span> <span><b>Active Online Bridge:</b> <code style="color: #a7f3d0; font-family: monospace; font-weight: 700;">${cleanUrl}</code>${pingHtml}</span>`;
+            } else if (lastStatus === 'offline') {
+                badge.style.display = 'inline-flex';
+                badge.style.background = 'rgba(239, 68, 68, 0.12)';
+                badge.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+                badge.style.color = '#f87171';
+                badge.innerHTML = `<span>🔴</span> <span><b>Bridge Offline:</b> <code style="color: #fca5a5; font-family: monospace; font-weight: 700;">${cleanUrl}</code> — <a href="#" onclick="testTelegramBridge(); return false;" style="color: #38bdf8; text-decoration: underline; font-weight: 600; margin-left: 4px;">Retry Test</a></span>`;
+            } else {
+                // Untested / neutral state - NOT green!
+                badge.style.display = 'inline-flex';
+                badge.style.background = 'rgba(148, 163, 184, 0.1)';
+                badge.style.border = '1px solid rgba(148, 163, 184, 0.25)';
+                badge.style.color = '#94a3b8';
+                badge.innerHTML = `<span>⚪</span> <span><b>Saved (Untested):</b> <code style="color: #cbd5e1; font-family: monospace; font-weight: 700;">${cleanUrl}</code> — <a href="#" onclick="testTelegramBridge(); return false;" style="color: #38bdf8; text-decoration: underline; font-weight: 600;">Click "Test Daemon" to verify</a></span>`;
+            }
+        }
+
         function setTelegramBridgeUrl(url) {
             triggerHaptic('light');
             const input = document.getElementById('telegramBridgeUrl');
             if (input) {
                 input.value = url;
                 settings.telegramBridgeUrl = url;
+                if (url) localStorage.setItem('cb_telegram_bridge_url', url);
+                const onlineUrl = localStorage.getItem('cb_telegram_bridge_online_url');
+                if (url !== onlineUrl) {
+                    localStorage.setItem('cb_telegram_bridge_last_status', 'untested');
+                }
                 onSettingChanged();
+                updateTelegramSavedIndicator();
                 showToast(`⚡ Bridge URL set to: <b>${url}</b>`);
             }
         }
@@ -8390,6 +8490,12 @@
             const btn = document.getElementById('btn-test-telegram');
             const bridgeUrl = input ? input.value.trim() : 'http://127.0.0.1:8088';
 
+            // Immediately persist user input
+            settings.telegramBridgeUrl = bridgeUrl;
+            if (bridgeUrl) localStorage.setItem('cb_telegram_bridge_url', bridgeUrl);
+            saveSettingsLocal();
+            saveConfigurationToServer(false);
+
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<span>⏳</span> Testing...';
@@ -8402,32 +8508,52 @@
                 statusEl.innerHTML = '⏳ <b>Pinging Telegram Bridge Daemon...</b>';
             }
 
+            const pingStart = performance.now();
             try {
                 let isOnline = false;
                 let data = null;
+                let measuredLatency = 0;
                 try {
                     const clientRes = await fetch(`${bridgeUrl.replace(/\/+$/, '')}/api/version`, { mode: 'cors' });
                     data = await clientRes.json();
+                    measuredLatency = Math.round(performance.now() - pingStart);
                     isOnline = Boolean(data && (data.online || data.success || data.current_version));
                     data.bridgeUrl = bridgeUrl;
+                    data.latencyMs = measuredLatency;
                 } catch (clientErr) {
+                    const sStart = performance.now();
                     const res = await fetch(`/api/telegram/status?bridgeUrl=${encodeURIComponent(bridgeUrl)}`);
                     data = await res.json();
+                    measuredLatency = (data && typeof data.latencyMs === 'number' && data.latencyMs > 0) 
+                        ? data.latencyMs 
+                        : Math.round(performance.now() - sStart);
                     isOnline = Boolean(data && (data.online || data.bridgeHealthy || data.success));
+                    if (data) data.latencyMs = measuredLatency;
                 }
                 if (isOnline) {
                     triggerHaptic('success');
+                    localStorage.setItem('cb_telegram_bridge_online_url', bridgeUrl);
+                    localStorage.setItem('cb_telegram_bridge_ping', String(measuredLatency));
+                    localStorage.setItem('cb_telegram_bridge_last_status', 'online');
+                    updateTelegramSavedIndicator();
+
                     if (statusEl) {
                         statusEl.style.background = 'rgba(16, 185, 129, 0.12)';
                         statusEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
                         statusEl.style.color = '#34d399';
-                        const ver = (data.versionData && data.versionData.current_version) ? ` (v${data.versionData.current_version})` : '';
-                        const lat = data.latencyMs ? ` • ${data.latencyMs}ms` : '';
-                        statusEl.innerHTML = `🟢 <b>Bridge Online${ver}${lat}:</b> High-speed MTProto direct streaming active at <code>${data.bridgeUrl || bridgeUrl}</code>.`;
+                        const ver = (data.versionData && data.versionData.current_version) ? ` (v${data.versionData.current_version})` : (data.current_version ? ` (v${data.current_version})` : '');
+                        const pingBadge = measuredLatency > 0 ? ` <span style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-family: monospace; font-size: 11px; margin: 0 4px;">⚡ ${measuredLatency}ms ping</span>` : '';
+                        statusEl.innerHTML = `🟢 <b>Bridge Online:</b>${pingBadge} High-speed MTProto direct streaming active at <code>${data.bridgeUrl || bridgeUrl}</code>.`;
                     }
-                    showToast('⚡ <b>Telegram Bridge Online:</b> High-speed direct streaming ready.');
+                    showToast(`⚡ <b>Telegram Bridge Online:</b> Connected (${measuredLatency}ms ping).`);
                 } else {
                     triggerHaptic('warning');
+                    localStorage.setItem('cb_telegram_bridge_last_status', 'offline');
+                    if (localStorage.getItem('cb_telegram_bridge_online_url') === bridgeUrl) {
+                        localStorage.removeItem('cb_telegram_bridge_online_url');
+                    }
+                    updateTelegramSavedIndicator();
+
                     if (statusEl) {
                         statusEl.style.background = 'rgba(245, 158, 11, 0.12)';
                         statusEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
@@ -8438,6 +8564,12 @@
                     showToast('ℹ️ <b>Bridge Offline:</b> Web player fallback active.');
                 }
             } catch (e) {
+                localStorage.setItem('cb_telegram_bridge_last_status', 'offline');
+                if (localStorage.getItem('cb_telegram_bridge_online_url') === bridgeUrl) {
+                    localStorage.removeItem('cb_telegram_bridge_online_url');
+                }
+                updateTelegramSavedIndicator();
+
                 if (statusEl) {
                     statusEl.style.background = 'rgba(239, 68, 68, 0.12)';
                     statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';

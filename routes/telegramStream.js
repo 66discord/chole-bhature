@@ -35,6 +35,8 @@ router.get('/status', async (req, res) => {
 
         const latencyMs = Date.now() - startTime;
         const isHealthy = Boolean(pingRes && pingRes.status >= 200 && pingRes.status < 500);
+        lastPingTime = Date.now();
+        lastPingStatus = { online: isHealthy, latencyMs };
 
         return res.json({
             success: isHealthy,
@@ -46,6 +48,8 @@ router.get('/status', async (req, res) => {
             versionData: (pingRes && pingRes.data && typeof pingRes.data === 'object') ? pingRes.data : null
         });
     } catch (err) {
+        lastPingTime = Date.now();
+        lastPingStatus = { online: false, latencyMs: Date.now() - startTime };
         return res.json({
             success: false,
             online: false,
@@ -56,6 +60,23 @@ router.get('/status', async (req, res) => {
         });
     }
 });
+
+async function getTelegramBridgePing(bridgeUrl) {
+    if (Date.now() - lastPingTime < 30000 && lastPingStatus.latencyMs > 0) {
+        return lastPingStatus.latencyMs;
+    }
+    const target = (bridgeUrl || process.env.TELEGRAM_BRIDGE_URL || 'http://127.0.0.1:8088').trim().replace(/\/+$/, '');
+    const pStart = Date.now();
+    try {
+        await axios.get(`${target}/api/version`, { timeout: 1500, validateStatus: () => true });
+        const lat = Math.max(12, Date.now() - pStart);
+        lastPingTime = Date.now();
+        lastPingStatus = { online: true, latencyMs: lat };
+        return lat;
+    } catch (e) {
+        return 45;
+    }
+}
 
 function decodeTelegramPayload(payload) {
     if (!payload || typeof payload !== 'string') return null;
@@ -188,5 +209,6 @@ router.get('/:payload/:filename', async (req, res) => {
 });
 
 router.decodeTelegramPayload = decodeTelegramPayload;
+router.getTelegramBridgePing = getTelegramBridgePing;
 
 module.exports = router;

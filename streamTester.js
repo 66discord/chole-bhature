@@ -4,7 +4,7 @@ const { parseTorrentTitle, cleanReleaseNoise } = require('./torrentParser');
 const { ingestStream, normalizeInfoHash, parseSizeToBytes, formatBytesToSize, extractCleanProvider } = require('./streamIngest');
 const { formatStreamCard, formatProviderChain } = require('./streamFormatter');
 
-const TIMEOUT_MS = (typeof process !== 'undefined' && (process.env.RENDER || process.env.VERCEL)) ? 800 : 1200;
+const TIMEOUT_MS = (typeof process !== 'undefined' && process.env.VERCEL) ? 800 : 1200;
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
 // High-speed domain latency memoization to avoid probing identical CDNs 50+ times
@@ -599,84 +599,38 @@ async function testStream(stream, showSeeders = true, config = {}) {
         };
     }
 
-    // Lightweight Eco Mode for Render & Vercel Free-Tiers (Quick HEAD probe with short timeout)
-    // Still validates stream liveness but with tighter resource constraints
-    const isEcoMode = Boolean(config.renderEcoMode === true || config.vercelEcoMode === true);
+    // Fast Eco Mode for Vercel Free-Tier (Zero-Blocking CPU / Instant Heuristics < 5ms)
+    // Disabled by default; user can enable via Settings / Admin tab
+    const isEcoMode = Boolean(config.vercelEcoMode === true);
     if (isEcoMode) {
-        const ECO_TIMEOUT = 600; // Shorter timeout for free-tier CPU budgets
-        try {
-            const urlObj = new URL(stream.url);
-            const origin = urlObj.origin;
+        let heuristicLatency = 120;
+        let isDead = false;
+        let statusCategory = 'fast';
 
-            // Check domain cache first
-            if (domainLatencyCache.has(origin)) {
-                const cachedDomain = domainLatencyCache.get(origin);
-                if (Date.now() - cachedDomain.timestamp < 300000) {
-                    if (cachedDomain.isDead) {
-                        const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
-                        return { ...stream, name: labels.name, title: labels.title, latency: 99999, isDead: true, statusCategory: 'dead', originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
-                    }
-                    const labels = formatStreamLabels(stream, cachedDomain.latency, false, false, showSeeders, config);
-                    return { ...stream, name: labels.name, title: labels.title, latency: cachedDomain.latency, isDead: false, statusCategory: cachedDomain.latency < 800 ? 'fast' : 'slow', originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
-                }
-            }
-
-            const pStart = Date.now();
-            const probeHeaders = {
-                'User-Agent': customHeaders['User-Agent'] || customHeaders['user-agent'] || USER_AGENT,
-                ...(customHeaders['Referer'] || customHeaders['referer'] ? { 'Referer': customHeaders['Referer'] || customHeaders['referer'] } : {})
-            };
-
-            try {
-                const headRes = await axios.head(stream.url, {
-                    timeout: ECO_TIMEOUT,
-                    headers: probeHeaders,
-                    httpAgent: dohHttpAgent,
-                    httpsAgent: dohHttpsAgent,
-                    validateStatus: (status) => status < 500,
-                    maxRedirects: 3
-                });
-                const ecoLatency = Math.max(45, Date.now() - pStart);
-                const contentType = (headRes.headers['content-type'] || '').toLowerCase();
-                const isHtml = contentType.includes('text/html') && !contentType.includes('video');
-
-                if (headRes.status === 403 || headRes.status === 404 || headRes.status === 410 || isHtml) {
-                    domainLatencyCache.set(origin, { timestamp: Date.now(), latency: 99999, isDead: true });
-                    const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
-                    return { ...stream, name: labels.name, title: labels.title, latency: 99999, isDead: true, statusCategory: 'dead', originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
-                }
-
-                domainLatencyCache.set(origin, { timestamp: Date.now(), latency: ecoLatency, isDead: false });
-                const statusCategory = ecoLatency < 800 ? 'fast' : 'slow';
-                const labels = formatStreamLabels(stream, ecoLatency, false, false, showSeeders, config);
-                return { ...stream, name: labels.name, title: labels.title, latency: ecoLatency, isDead: false, statusCategory, originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
-            } catch (headErr) {
-                // HEAD failed — try a quick GET with Range header as fallback (some CDNs block HEAD)
-                try {
-                    const getRes = await axios.get(stream.url, {
-                        timeout: ECO_TIMEOUT,
-                        headers: { ...probeHeaders, 'Range': 'bytes=0-0' },
-                        httpAgent: dohHttpAgent,
-                        httpsAgent: dohHttpsAgent,
-                        responseType: 'stream',
-                        validateStatus: (status) => status < 500,
-                        maxRedirects: 3
-                    });
-                    if (getRes.data && typeof getRes.data.destroy === 'function') getRes.data.destroy();
-                    const ecoLatency = Math.max(45, Date.now() - pStart);
-                    domainLatencyCache.set(origin, { timestamp: Date.now(), latency: ecoLatency, isDead: false });
-                    const labels = formatStreamLabels(stream, ecoLatency, false, false, showSeeders, config);
-                    return { ...stream, name: labels.name, title: labels.title, latency: ecoLatency, isDead: false, statusCategory: ecoLatency < 800 ? 'fast' : 'slow', originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
-                } catch (getErr) {
-                    domainLatencyCache.set(origin, { timestamp: Date.now(), latency: 99999, isDead: true });
-                    const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
-                    return { ...stream, name: labels.name, title: labels.title, latency: 99999, isDead: true, statusCategory: 'dead', originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
-                }
-            }
-        } catch (urlParseErr) {
-            const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
-            return { ...stream, name: labels.name, title: labels.title, latency: 99999, isDead: true, statusCategory: 'dead', originalProvider: providerName, _rawStream: rawSnapshot, _preparsedMeta: initialMeta };
+        const urlLower = (stream.url || '').toLowerCase();
+        if (urlLower.includes('hubcloud') || urlLower.includes('pixeldrain') || urlLower.includes('fastdl') || urlLower.includes('drive.google')) {
+            heuristicLatency = 95;
+            statusCategory = 'fast';
+        } else if (urlLower.includes('streamtape') || urlLower.includes('dood') || urlLower.includes('mixdrop')) {
+            heuristicLatency = 420;
+            statusCategory = 'fast';
+        } else {
+            heuristicLatency = 140;
+            statusCategory = 'fast';
         }
+
+        const labels = formatStreamLabels(stream, heuristicLatency, false, isDead, showSeeders, config);
+        return {
+            ...stream,
+            name: labels.name,
+            title: labels.title,
+            latency: heuristicLatency,
+            isDead: isDead,
+            statusCategory: statusCategory,
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
+        };
     }
 
     try {
@@ -689,25 +643,31 @@ async function testStream(stream, showSeeders = true, config = {}) {
             ...(customHeaders['Origin'] || customHeaders['origin'] ? { 'Origin': customHeaders['Origin'] || customHeaders['origin'] } : {})
         };
 
-        // --- Phase 1: Get CDN latency (cached per-origin, shared across all streams from same CDN) ---
+        // Check if origin has already been probed recently (< 5 min TTL)
         let latency = 0;
+        let isDead = false;
 
         if (domainLatencyCache.has(origin)) {
             const cachedDomain = domainLatencyCache.get(origin);
             if (Date.now() - cachedDomain.timestamp < 300000) {
                 latency = cachedDomain.latency;
+                isDead = cachedDomain.isDead;
             }
         }
 
         if (!latency && domainLatencyPending.has(origin)) {
             const result = await domainLatencyPending.get(origin);
             latency = result.latency;
+            isDead = result.isDead;
         }
 
         if (!latency) {
             const probeTask = (async () => {
-                const pStart = Date.now();
                 let probedLat = 280;
+                let deadState = false;
+
+                // Fast HEAD probe on server origin
+                const pStart = Date.now();
                 try {
                     await axios.head(origin, {
                         timeout: TIMEOUT_MS,
@@ -718,9 +678,11 @@ async function testStream(stream, showSeeders = true, config = {}) {
                     });
                     probedLat = Math.max(45, Date.now() - pStart);
                 } catch (e) {
-                    probedLat = 320; // CDN likely blocks HEAD on root, use nominal latency
+                    // Nominal fast latency if HEAD is blocked by CDN bot-filter
+                    probedLat = 320;
                 }
-                const res = { latency: probedLat };
+
+                const res = { latency: probedLat, isDead: deadState };
                 domainLatencyCache.set(origin, { timestamp: Date.now(), ...res });
                 return res;
             })();
@@ -729,16 +691,14 @@ async function testStream(stream, showSeeders = true, config = {}) {
             try {
                 const probeRes = await probeTask;
                 latency = probeRes.latency;
+                isDead = probeRes.isDead;
             } finally {
                 domainLatencyPending.delete(origin);
             }
         }
 
-        // --- Phase 2: Per-URL liveness check (NOT cached, always validates individual file) ---
-        let isDead = false;
-
-        // HubCloud-specific deleted file detection
-        if (stream.url.includes('hubcloud.')) {
+        // Specific per-stream check for HubCloud links (detect if this specific file was removed)
+        if (!isDead && stream.url.includes('hubcloud.')) {
             try {
                 const hcRes = await axios.get(stream.url, { 
                     timeout: TIMEOUT_MS, 
@@ -750,45 +710,10 @@ async function testStream(stream, showSeeders = true, config = {}) {
                 const data = typeof hcRes.data === 'string' ? hcRes.data.toLowerCase() : '';
                 if (data.includes('file deleted') || data.includes('file not found') || data.includes('file was deleted') || data.includes('page not found') || hcRes.status === 404) {
                     isDead = true;
+                    latency = 99999;
                 }
             } catch (err) {
-                // Transient error — keep alive
-            }
-        }
-
-        // Generic per-URL HEAD liveness probe for all non-HubCloud streams
-        if (!isDead && !stream.url.includes('hubcloud.')) {
-            try {
-                const headRes = await axios.head(stream.url, {
-                    timeout: TIMEOUT_MS,
-                    headers: probeHeaders,
-                    httpAgent: dohHttpAgent,
-                    httpsAgent: dohHttpsAgent,
-                    validateStatus: () => true,
-                    maxRedirects: 3
-                });
-                
-                if (headRes.status === 403 || headRes.status === 404 || headRes.status === 410 || headRes.status >= 500) {
-                    isDead = true;
-                }
-                
-                // Detect HTML error pages masquerading as video downloads
-                const contentType = (headRes.headers['content-type'] || '').toLowerCase();
-                if (contentType.includes('text/html') && !contentType.includes('video')) {
-                    isDead = true;
-                }
-
-                // Use per-URL latency if it's more accurate than domain-level
-                const urlLatency = Math.max(45, Date.now() - startTime);
-                if (urlLatency < latency) {
-                    latency = urlLatency;
-                }
-            } catch (headErr) {
-                // HEAD on URL failed — stream might be dead or CDN blocks HEAD
-                // Only mark dead if domain itself was reachable (latency probe succeeded)
-                if (latency < 300) {
-                    isDead = true;
-                }
+                // Keep stream alive on transient error
             }
         }
 
@@ -1042,7 +967,7 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
     );
 
     // Record Analytics
-    if (providerAnalytics) {
+    if (providerAnalytics && typeof providerAnalytics.has === 'function') {
         testedStreams.forEach(s => {
             const p = s.originalProvider;
             if (!providerAnalytics.has(p)) {

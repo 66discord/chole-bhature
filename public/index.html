@@ -3825,7 +3825,7 @@
                     <div class="section-wrap" id="section-render-guard">
                         <div class="section-label-bar">
                             <span class="section-label">⚡ Render Eco Optimizer (Universal)</span>
-                            <span id="admin-render-badge" class="tag-pill-badge" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">🟢 Universal Eco: Active (Sub-5ms)</span>
+                            <span id="admin-render-badge" class="tag-pill-badge" style="background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.25); color: var(--text-muted);">⚪ Universal Eco: Disabled</span>
                         </div>
                         <div class="section-card">
                             <div class="setting-item-row" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 16px;">
@@ -3840,7 +3840,7 @@
                                     <label class="filter-capsule">
                                         <span class="filter-capsule-text">⚡ Eco Mode</span>
                                         <div class="switch-toggle">
-                                            <input type="checkbox" id="renderEcoMode" onchange="handleAdminEcoToggle(this.checked)" checked>
+                                            <input type="checkbox" id="renderEcoMode" onchange="handleAdminEcoToggle(this.checked)">
                                             <span class="switch-slider"></span>
                                         </div>
                                     </label>
@@ -4018,7 +4018,7 @@
                                     <label class="filter-capsule">
                                         <span class="filter-capsule-text">⚡ Eco Mode</span>
                                         <div class="switch-toggle">
-                                            <input type="checkbox" id="vercelEcoMode" onchange="handleAdminEcoToggle(this.checked)" checked>
+                                            <input type="checkbox" id="vercelEcoMode" onchange="handleAdminEcoToggle(this.checked)">
                                             <span class="switch-slider"></span>
                                         </div>
                                     </label>
@@ -4629,8 +4629,8 @@
             showFileSize: true,
             showReleaseGroup: true,
             includeOriginalTitle: true,
-            renderEcoMode: true,
-            vercelEcoMode: true,
+            renderEcoMode: false,
+            vercelEcoMode: false,
             enableDoh: true,
             dohProvider: 'cloudflare',
             debridProvider: 'none',
@@ -5317,7 +5317,7 @@
             if (showReleaseGroupEl) settings.showReleaseGroup = showReleaseGroupEl.checked;
             if (includeOriginalTitleEl) settings.includeOriginalTitle = includeOriginalTitleEl.checked;
 
-            let isEcoModeActive = settings.vercelEcoMode !== false && settings.renderEcoMode !== false;
+            let isEcoModeActive = Boolean(settings.vercelEcoMode || settings.renderEcoMode);
             if (renderEcoModeEl) isEcoModeActive = renderEcoModeEl.checked;
             else if (vercelEcoModeEl) isEcoModeActive = vercelEcoModeEl.checked;
             settings.vercelEcoMode = isEcoModeActive;
@@ -5409,8 +5409,8 @@
                 showFileSize: settings.showFileSize !== false,
                 showReleaseGroup: settings.showReleaseGroup !== false,
                 includeOriginalTitle: settings.includeOriginalTitle !== false,
-                renderEcoMode: Boolean(settings.renderEcoMode !== false && settings.vercelEcoMode !== false),
-                vercelEcoMode: Boolean(settings.vercelEcoMode !== false && settings.renderEcoMode !== false),
+                renderEcoMode: Boolean(settings.renderEcoMode || settings.vercelEcoMode),
+                vercelEcoMode: Boolean(settings.vercelEcoMode || settings.renderEcoMode),
                 enableDoh: settings.enableDoh !== false,
                 dohProvider: settings.dohProvider || 'cloudflare',
                 debridProvider: settings.debridProvider || 'none',
@@ -5518,7 +5518,7 @@
                 settings.vercelEcoMode = sEcoBool;
                 try { localStorage.setItem('nuvio_settings', JSON.stringify(settings)); } catch (_) {}
             }
-            const isEco = Boolean(settings.renderEcoMode !== false && settings.vercelEcoMode !== false);
+            const isEco = Boolean(settings.renderEcoMode || settings.vercelEcoMode);
 
             // Sync admin eco toggles in UI
             const rEcoEl = document.getElementById('renderEcoMode');

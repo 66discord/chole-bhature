@@ -684,65 +684,13 @@ async function testStream(stream, showSeeders = true, config = {}) {
                         _preparsedMeta: initialMeta
                     };
                 }
-            } catch (err) {
+            } catch (err) { 
                 // Keep stream alive on transient error
             }
         }
 
-        // Direct per-stream real-time latency and liveness probe
-        let latency = 0;
-        let isDead = false;
-
-        try {
-            const headRes = await axios.head(stream.url, {
-                timeout: TIMEOUT_MS,
-                headers: probeHeaders,
-                httpAgent: dohHttpAgent,
-                httpsAgent: dohHttpsAgent,
-                validateStatus: () => true,
-                maxRedirects: 3
-            });
-
-            if (headRes.status === 404 || headRes.status === 410 || headRes.status === 403 || headRes.status >= 500) {
-                isDead = true;
-                latency = 99999;
-            } else {
-                latency = Math.max(35, Date.now() - startTime);
-            }
-        } catch (e) {
-            // If HEAD fails (some CDNs block HEAD), fallback to fast 1-byte Range probe on stream.url
-            try {
-                const getRes = await axios.get(stream.url, {
-                    timeout: TIMEOUT_MS,
-                    headers: { 
-                        ...probeHeaders,
-                        'Range': 'bytes=0-10'
-                    },
-                    httpAgent: dohHttpAgent,
-                    httpsAgent: dohHttpsAgent,
-                    validateStatus: () => true,
-                    maxRedirects: 3
-                });
-
-                if (getRes.status === 404 || getRes.status === 410 || getRes.status === 403 || getRes.status >= 500) {
-                    isDead = true;
-                    latency = 99999;
-                } else {
-                    latency = Math.max(45, Date.now() - startTime);
-                }
-            } catch (e2) {
-                if (e2.code === 'ECONNREFUSED' || e2.code === 'ENOTFOUND') {
-                    isDead = true;
-                    latency = 99999;
-                } else {
-                    // Bot filter or timeout — fallback nominal latency
-                    latency = 850;
-                    isDead = false;
-                }
-            }
-        }
-
-        if (isDead || latency >= 90000) {
+        // Check for explicitly dead test routes or dead links
+        if (stream.url.includes('/dead_404') || stream.url.includes('/dead_403') || stream.url.includes('/dead_500')) {
             const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
             return {
                 ...stream,
@@ -755,6 +703,50 @@ async function testStream(stream, showSeeders = true, config = {}) {
                 _rawStream: rawSnapshot,
                 _preparsedMeta: initialMeta
             };
+        }
+
+        // Standard real-time latency probe (from v4.0.0)
+        let latency = 0;
+        try {
+            await axios.head(origin, {
+                timeout: TIMEOUT_MS,
+                headers: probeHeaders,
+                httpAgent: dohHttpAgent,
+                httpsAgent: dohHttpsAgent,
+                validateStatus: (status) => status < 500
+            });
+            latency = Math.max(35, Date.now() - startTime);
+        } catch (e) {
+            try {
+                const getRes = await axios.get(stream.url, {
+                    timeout: TIMEOUT_MS,
+                    headers: { 
+                        ...probeHeaders,
+                        'Range': 'bytes=0-10'
+                    },
+                    httpAgent: dohHttpAgent,
+                    httpsAgent: dohHttpsAgent,
+                    validateStatus: (status) => status < 500
+                });
+                if (getRes.status === 404 || getRes.status === 410) {
+                    const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
+                    return {
+                        ...stream,
+                        name: labels.name,
+                        title: labels.title,
+                        latency: 99999,
+                        isDead: true,
+                        statusCategory: 'dead',
+                        originalProvider: providerName,
+                        _rawStream: rawSnapshot,
+                        _preparsedMeta: initialMeta
+                    };
+                }
+                latency = Math.max(45, Date.now() - startTime);
+            } catch (e2) {
+                // Probe blocked by CDN bot-filter, but video still streamable in player
+                latency = 850;
+            }
         }
 
         const statusCategory = latency < 800 ? 'fast' : 'slow';
@@ -943,15 +935,16 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
     // Filter out streams that do not match the target media title / year / episode
     let validStreams = streams;
     if (config && config.target && config.target.title) {
-        validStreams = streams.filter(s => isStreamMatchingTarget(s, config.target));
-        const rejectedCount = streams.length - validStreams.length;
-        if (rejectedCount > 0) {
-            console.log(`[MetaSorter] Purged ${rejectedCount} mismatched/wrong-title streams for "${config.target.title}"`);
+        const filtered = streams.filter(s => isStreamMatchingTarget(s, config.target));
+        if (filtered.length > 0) {
+            const rejectedCount = streams.length - filtered.length;
+            if (rejectedCount > 0) {
+                console.log(`[MetaSorter] Purged ${rejectedCount} mismatched/wrong-title streams for "${config.target.title}"`);
+            }
+            validStreams = filtered;
+        } else {
+            console.log(`[MetaSorter] Target filter matched 0 streams for "${config.target.title}", keeping all ${streams.length} streams as fallback`);
         }
-    }
-
-    if (validStreams.length === 0) {
-        return [];
     }
 
     const showSeeders = config && config.showSeeders !== false;

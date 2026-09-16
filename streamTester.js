@@ -599,9 +599,25 @@ async function testStream(stream, showSeeders = true, config = {}) {
         };
     }
 
+    // Handle Telegram cloud streams
+    if (stream.url && (stream.url.includes('/stream/telegram') || stream.provider === 'Telegram' || providerName.toLowerCase().includes('telegram'))) {
+        const labels = formatStreamLabels(stream, 120, false, false, showSeeders, config);
+        return {
+            ...stream,
+            name: labels.name,
+            title: labels.title,
+            latency: 120,
+            isDead: false,
+            statusCategory: 'fast',
+            originalProvider: providerName,
+            _rawStream: rawSnapshot,
+            _preparsedMeta: initialMeta
+        };
+    }
+
     // Fast Eco Mode for Vercel Free-Tier (Zero-Blocking CPU / Instant Heuristics < 5ms)
-    // Disabled by default; user can enable via Settings / Admin tab
-    const isEcoMode = Boolean(config.vercelEcoMode === true);
+    // Disabled by default; only active if explicitly enabled in user config
+    const isEcoMode = Boolean(config.vercelEcoMode === true || config.renderEcoMode === true);
     if (isEcoMode) {
         let heuristicLatency = 120;
         let isDead = false;
@@ -643,62 +659,8 @@ async function testStream(stream, showSeeders = true, config = {}) {
             ...(customHeaders['Origin'] || customHeaders['origin'] ? { 'Origin': customHeaders['Origin'] || customHeaders['origin'] } : {})
         };
 
-        // Check if origin has already been probed recently (< 5 min TTL)
-        let latency = 0;
-        let isDead = false;
-
-        if (domainLatencyCache.has(origin)) {
-            const cachedDomain = domainLatencyCache.get(origin);
-            if (Date.now() - cachedDomain.timestamp < 300000) {
-                latency = cachedDomain.latency;
-                isDead = cachedDomain.isDead;
-            }
-        }
-
-        if (!latency && domainLatencyPending.has(origin)) {
-            const result = await domainLatencyPending.get(origin);
-            latency = result.latency;
-            isDead = result.isDead;
-        }
-
-        if (!latency) {
-            const probeTask = (async () => {
-                let probedLat = 280;
-                let deadState = false;
-
-                // Fast HEAD probe on server origin
-                const pStart = Date.now();
-                try {
-                    await axios.head(origin, {
-                        timeout: TIMEOUT_MS,
-                        headers: probeHeaders,
-                        httpAgent: dohHttpAgent,
-                        httpsAgent: dohHttpsAgent,
-                        validateStatus: (status) => status < 500
-                    });
-                    probedLat = Math.max(45, Date.now() - pStart);
-                } catch (e) {
-                    // Nominal fast latency if HEAD is blocked by CDN bot-filter
-                    probedLat = 320;
-                }
-
-                const res = { latency: probedLat, isDead: deadState };
-                domainLatencyCache.set(origin, { timestamp: Date.now(), ...res });
-                return res;
-            })();
-
-            domainLatencyPending.set(origin, probeTask);
-            try {
-                const probeRes = await probeTask;
-                latency = probeRes.latency;
-                isDead = probeRes.isDead;
-            } finally {
-                domainLatencyPending.delete(origin);
-            }
-        }
-
         // Specific per-stream check for HubCloud links (detect if this specific file was removed)
-        if (!isDead && stream.url.includes('hubcloud.')) {
+        if (stream.url.includes('hubcloud.')) {
             try {
                 const hcRes = await axios.get(stream.url, { 
                     timeout: TIMEOUT_MS, 
@@ -708,12 +670,75 @@ async function testStream(stream, showSeeders = true, config = {}) {
                     validateStatus: () => true 
                 });
                 const data = typeof hcRes.data === 'string' ? hcRes.data.toLowerCase() : '';
-                if (data.includes('file deleted') || data.includes('file not found') || data.includes('file was deleted') || data.includes('page not found') || hcRes.status === 404) {
-                    isDead = true;
-                    latency = 99999;
+                if (data.includes('file deleted') || data.includes('file not found') || data.includes('file was deleted') || data.includes('page not found') || hcRes.status === 404 || hcRes.status === 410) {
+                    const labels = formatStreamLabels(stream, 99999, false, true, showSeeders, config);
+                    return {
+                        ...stream,
+                        name: labels.name,
+                        title: labels.title,
+                        latency: 99999,
+                        isDead: true,
+                        statusCategory: 'dead',
+                        originalProvider: providerName,
+                        _rawStream: rawSnapshot,
+                        _preparsedMeta: initialMeta
+                    };
                 }
             } catch (err) {
                 // Keep stream alive on transient error
+            }
+        }
+
+        // Direct per-stream real-time latency and liveness probe
+        let latency = 0;
+        let isDead = false;
+
+        try {
+            const headRes = await axios.head(stream.url, {
+                timeout: TIMEOUT_MS,
+                headers: probeHeaders,
+                httpAgent: dohHttpAgent,
+                httpsAgent: dohHttpsAgent,
+                validateStatus: () => true,
+                maxRedirects: 3
+            });
+
+            if (headRes.status === 404 || headRes.status === 410 || headRes.status === 403 || headRes.status >= 500) {
+                isDead = true;
+                latency = 99999;
+            } else {
+                latency = Math.max(35, Date.now() - startTime);
+            }
+        } catch (e) {
+            // If HEAD fails (some CDNs block HEAD), fallback to fast 1-byte Range probe on stream.url
+            try {
+                const getRes = await axios.get(stream.url, {
+                    timeout: TIMEOUT_MS,
+                    headers: { 
+                        ...probeHeaders,
+                        'Range': 'bytes=0-10'
+                    },
+                    httpAgent: dohHttpAgent,
+                    httpsAgent: dohHttpsAgent,
+                    validateStatus: () => true,
+                    maxRedirects: 3
+                });
+
+                if (getRes.status === 404 || getRes.status === 410 || getRes.status === 403 || getRes.status >= 500) {
+                    isDead = true;
+                    latency = 99999;
+                } else {
+                    latency = Math.max(45, Date.now() - startTime);
+                }
+            } catch (e2) {
+                if (e2.code === 'ECONNREFUSED' || e2.code === 'ENOTFOUND') {
+                    isDead = true;
+                    latency = 99999;
+                } else {
+                    // Bot filter or timeout — fallback nominal latency
+                    latency = 850;
+                    isDead = false;
+                }
             }
         }
 
@@ -748,14 +773,14 @@ async function testStream(stream, showSeeders = true, config = {}) {
         };
 
     } catch (err) {
-        const labels = formatStreamLabels(stream, 350, false, false, showSeeders, config);
+        const labels = formatStreamLabels(stream, 1200, false, false, showSeeders, config);
         return {
             ...stream,
             name: labels.name,
             title: labels.title,
-            latency: 350,
+            latency: 1200,
             isDead: false,
-            statusCategory: 'fast',
+            statusCategory: 'slow',
             originalProvider: providerName,
             _rawStream: rawSnapshot,
             _preparsedMeta: initialMeta
@@ -1221,7 +1246,7 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
 
     // Clean up internal properties and ensure behaviorHints.filename is enriched for Nuvio Native Badges
     return filteredStreams.map(s => {
-        const { latency, isDead, statusCategory, originalProvider, ...stremioStream } = s;
+        const stremioStream = { ...s };
         
         if (config.debridProvider && config.debridProvider !== 'none' && config.debridApiKey && config.addonHost) {
             const isP2P = (stremioStream.url && stremioStream.url.startsWith('magnet:')) || stremioStream.infoHash;
@@ -1266,7 +1291,7 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
                     torrentName: synthFilename,
                     filename: synthFilename,
                     size: meta.sizeBytes || null,
-                    tracker: originalProvider || '',
+                    tracker: s.originalProvider || '',
                     parsed: {
                         raw_title: synthFilename,
                         parsed_title: target.title || meta.cleanTitle || 'Video',

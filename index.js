@@ -7,6 +7,7 @@ const { setDohEnabled, setDohProvider, getDohConfig, dohHttpsAgent } = require('
 const iptvManager = require('./iptvManager');
 const { searchPencariMovie } = require('./scrapers/pencarimovie');
 const telegramRouter = require('./routes/telegramStream');
+const streamProxyRouter = require('./routes/streamProxy');
 const axios = require('axios');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -2523,6 +2524,9 @@ app.get('/c/:configId/clear-cache/:type/:id', (req, res) => {
 // Mount Telegram streaming routes & bridge API
 app.use('/stream/telegram', telegramRouter);
 app.use('/api/telegram', telegramRouter);
+
+// Mount Universal Stream Proxy (HTTP 206 Partial Content & Headers Spoofing)
+app.use('/proxy/stream', streamProxyRouter);
 
 // Dynamic configuration endpoints for Stremio Router (With Vercel Edge CDN Headers)
 app.use('/c/:configId', (req, res, next) => {

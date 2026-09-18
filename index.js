@@ -324,7 +324,7 @@ app.get(['/c/:configId', '/c/:configId/configure', '/configure/:configId'], (req
 // API to save configuration (Instant Sync)
 app.post('/api/config/save', (req, res) => {
     try {
-        let { configId, token, config } = req.body;
+        let { configId, token, config, oldToken } = req.body;
         if (!configId && token) {
             configId = token;
         }
@@ -336,10 +336,13 @@ app.post('/api/config/save', (req, res) => {
         if (token && token !== configId) {
             saveUserConfig(token, config);
         }
+        if (oldToken && oldToken !== configId && oldToken !== token) {
+            saveUserConfig(oldToken, config);
+        }
         
         // Invalidate stream cache for this configuration
         for (const key of streamCache.keys()) {
-            if (key.includes(configId) || (token && key.includes(token))) {
+            if (key.includes(configId) || (token && key.includes(token)) || (oldToken && key.includes(oldToken))) {
                 streamCache.delete(key);
             }
         }

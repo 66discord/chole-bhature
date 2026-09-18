@@ -2796,9 +2796,6 @@
                         <a href="https://nuvioplugin.com/" target="_blank" rel="noopener noreferrer" class="btn-nuvio" style="flex: 1; min-width: 120px; justify-content: center; font-size: 12px; margin-top: 0; padding: 10px 12px;">
                             ✨ Nuvio Plugins
                         </a>
-                        <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank" rel="noopener noreferrer" class="pill-btn pill-btn-glass" style="flex: 1; min-width: 120px; justify-content: center; font-size: 12px; text-decoration: none; padding: 10px 12px; border-color: rgba(14, 165, 233, 0.35); color: #38bdf8;">
-                            🎬 PencariMovie Server
-                        </a>
                     </div>
                 </div>
             </div>
@@ -5453,6 +5450,7 @@
             const activeToken = encodeConfigToken(configObj);
             const isBase64Token = (id) => typeof id === 'string' && id.length > 32;
             const targetId = (!configId || isBase64Token(configId)) ? activeToken : configId;
+            const oldToken = configId; // Preserve original URL config ID to update it on the server
             configId = targetId;
             try { localStorage.setItem('cb_config_id', targetId); } catch (_) {}
             
@@ -5460,7 +5458,7 @@
                 const res = await fetch('/api/config/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ configId: targetId, token: activeToken, config: configObj })
+                    body: JSON.stringify({ configId: targetId, token: activeToken, config: configObj, oldToken: oldToken })
                 });
                 const data = await res.json();
                 if (data.success) {

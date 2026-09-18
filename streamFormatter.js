@@ -24,19 +24,26 @@ function formatProviderChain(providers, fallback = 'Stream') {
 }
 
 function getDebridBadge(ingested, config = {}) {
-    const provider = (config.debridProvider || '').toLowerCase();
+    const provider = (config.debridProvider && config.debridProvider !== 'none') ? config.debridProvider.toLowerCase() : null;
+    const hasKey = Boolean(config.debridApiKey);
+
     if (ingested.isDebridCached) {
-        if (provider === 'torbox') return '⚡ [TB+] Instant';
-        if (provider === 'alldebrid') return '⚡ [AD+] Instant';
-        if (provider === 'premiumize') return '⚡ [PM+] Instant';
-        return '⚡ [RD+] Instant';
+        if (hasKey && provider) {
+            if (provider === 'torbox') return '⚡ [TB+] Instant';
+            if (provider === 'alldebrid') return '⚡ [AD+] Instant';
+            if (provider === 'premiumize') return '⚡ [PM+] Instant';
+            return '⚡ [RD+] Instant';
+        }
+        return '⚡ [Cached] Instant'; // Upstream cached, but we don't know which service
     }
-    if (ingested.isP2P && provider) {
+    
+    if (ingested.isP2P && hasKey && provider) {
         if (provider === 'torbox') return '⚡ [TB]';
         if (provider === 'alldebrid') return '⚡ [AD]';
         if (provider === 'premiumize') return '⚡ [PM]';
         return '⚡ [RD]';
     }
+    
     return null;
 }
 

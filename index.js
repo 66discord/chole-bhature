@@ -1967,6 +1967,7 @@ function createAddon(config) {
             })();
 
             await Promise.all([
+                tgScrapePromise,
                 ...allProviders.map(async (provider) => {
                     try {
                         if (config.enableQuarantine !== false) {

@@ -57,6 +57,12 @@ router.get('/', async (req, res) => {
         }
         res.setHeader('Access-Control-Allow-Origin', '*');
 
+        if (process.env.VERCEL) {
+            // Vercel Serverless limits execution time (10s-60s) which breaks streaming media.
+            // Redirect immediately to prevent abrupt cutoffs.
+            return res.redirect(302, targetUrl);
+        }
+
         remoteRes.data.pipe(res);
 
         req.on('close', () => {

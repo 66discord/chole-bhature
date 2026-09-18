@@ -107,7 +107,9 @@ app.use((req, res, next) => {
 });
 
 // Persistent User Configuration Store
-const CONFIGS_FILE = path.join(__dirname, 'user_configs.json');
+const CONFIGS_FILE = process.env.VERCEL 
+    ? path.join('/tmp', 'user_configs.json')
+    : path.join(__dirname, 'user_configs.json');
 const userConfigs = new Map();
 let lastSavedConfig = null;
 let lastSavedConfigId = null;
@@ -507,7 +509,9 @@ function enforceRenderMemoryGuard() {
         }
     } catch (e) {}
 }
-setInterval(enforceRenderMemoryGuard, 60000).unref();
+if (!process.env.VERCEL) {
+    setInterval(enforceRenderMemoryGuard, 60000).unref();
+}
 
 // Render Anti-Sleep Keep-Alive Heartbeat (Beats 15-Minute Inactivity Spin-Down)
 let renderKeepAliveTimer = null;

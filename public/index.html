@@ -42,12 +42,19 @@
             /* Electric Violet */
             --accent-secondary: #06b6d4;
             /* Neon Cyan */
+            --text-success: #34d399;
             --accent-emerald: #10b981;
             /* Emerald */
+            --text-purple: var(--text-purple);
+            --text-green: var(--text-green);
+            --text-amber: var(--text-amber);
+            --text-rose: var(--text-rose);
+            --text-blue: var(--text-blue);
             --accent-rose: #f43f5e;
             /* Rose */
             --accent-amber: #f59e0b;
             /* Amber */
+            --overlay-base: 255, 255, 255;
             --border-subtle: rgba(var(--overlay-base), 0.08);
             --border-highlight: rgba(139, 92, 246, 0.3);
             --gradient-hero: linear-gradient(180deg, rgba(30, 26, 52, 0.95) 0%, rgba(8, 9, 14, 0.98) 100%);
@@ -56,30 +63,51 @@
             --radius-pill: 9999px;
             --radius-card: 20px;
             --radius-input: 14px;
-            --overlay-base: 255, 255, 255;
         }
 
         /* Light Theme */
         body.theme-light {
+            --overlay-base: 0, 0, 0;
             --bg-base: #f8fafc;
             --bg-surface: #ffffff;
             --bg-surface-secondary: #f1f5f9;
-            --bg-card: rgba(var(--overlay-base), 0.78);
-            --bg-card-hover: rgba(var(--overlay-base), 0.95);
+            --bg-card: rgba(255, 255, 255, 0.78);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
             --bg-card-solid: #ffffff;
             --bg-input: #f1f5f9;
             --text-primary: #0f172a;
             --text-secondary: #475569;
             --text-muted: #64748b;
+            --text-success: #059669;
+            --text-purple: #7c3aed;
+            --text-green: #059669;
+            --text-amber: #b45309;
+            --text-rose: #e11d48;
+            --text-blue: #0284c7;
+            --gradient-hero: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
             --border-subtle: rgba(0, 0, 0, 0.08);
             --border-highlight: rgba(139, 92, 246, 0.3);
             --shadow-card: 0 16px 40px -8px rgba(0, 0, 0, 0.1);
             --shadow-glow: 0 0 32px rgba(139, 92, 246, 0.15);
-            --overlay-base: 0, 0, 0;
             background-image:
                 radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
                 radial-gradient(circle at 10% 40%, rgba(6, 182, 212, 0.05) 0%, transparent 45%),
                 radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 45%);
+        }
+        body.theme-light .hero-title {
+            color: #1e1b4b;
+            text-shadow: 0 4px 24px rgba(99, 102, 241, 0.25);
+        }
+
+        body.theme-light .pill-btn-glass {
+            background: rgba(255, 255, 255, 0.65);
+            border-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            color: #1e293b;
+        }
+
+        body.theme-light .pill-btn-glass:hover {
+            background: rgba(255, 255, 255, 0.95);
         }
 
         /* AMOLED Black Theme */
@@ -219,9 +247,9 @@
         }
 
         body.theme-light .top-nav-bar {
-            background: rgba(var(--overlay-base), 0.88);
+            background: rgba(255, 255, 255, 0.88);
             border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(var(--overlay-base), 0.95);
+            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
         }
 
         .nav-brand-pill {
@@ -262,7 +290,7 @@
             font-size: 10px;
             font-weight: 700;
             background: rgba(139, 92, 246, 0.16);
-            color: #c4b5fd;
+            color: var(--text-purple);
             padding: 2px 6.5px;
             border-radius: var(--radius-pill);
             border: 1px solid rgba(139, 92, 246, 0.28);
@@ -379,7 +407,7 @@
             line-height: 0;
             background: rgba(var(--overlay-base), 0.05);
             border: 1px solid rgba(var(--overlay-base), 0.09);
-            color: #cbd5e1;
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             flex-shrink: 0;
@@ -582,7 +610,7 @@
             padding: 0 12px;
             font-size: 11.5px;
             font-weight: 700;
-            color: #34d399;
+            color: var(--text-success);
             background: rgba(16, 185, 129, 0.12);
             border: 1px solid rgba(16, 185, 129, 0.35);
             border-radius: var(--radius-pill);
@@ -1100,7 +1128,7 @@
         .tag-pill-badge {
             background: rgba(var(--overlay-base), 0.06);
             border: 1px solid rgba(var(--overlay-base), 0.1);
-            color: #cbd5e1;
+            color: var(--text-muted);
             padding: 2px 8px;
             border-radius: var(--radius-pill);
             font-size: 10px;
@@ -1305,7 +1333,7 @@
             flex: 1 1 auto;
             background-color: var(--bg-input);
             border: 1px solid var(--border-subtle);
-            color: white;
+            color: var(--text-primary);
             padding: 12px 16px;
             border-radius: var(--radius-input);
             font-size: 13.5px;
@@ -1335,6 +1363,7 @@
             background-position: right 14px center;
             box-sizing: border-box;
             cursor: pointer;
+            appearance: none;
         }
 
         .input-bar-group select:hover {
@@ -1354,24 +1383,24 @@
 
         select,
         option {
-            color-scheme: dark;
+            color-scheme: light dark;
         }
 
         select option,
         .input-bar-group select option {
             background-color: #0e111a !important;
-            color: #f8fafc !important;
+            color: var(--text-primary) !important;
             font-weight: 600;
             padding: 10px 14px;
         }
 
-        body.light-theme select,
-        body.light-theme option {
+        body.theme-light select,
+        body.theme-light option {
             color-scheme: light;
         }
 
-        body.light-theme select option,
-        body.light-theme .input-bar-group select option {
+        body.theme-light select option,
+        body.theme-light .input-bar-group select option {
             background-color: #ffffff !important;
             color: #0f172a !important;
         }
@@ -1443,7 +1472,7 @@
 
         .custom-select-wrap.active .custom-select-arrow {
             transform: rotate(180deg);
-            color: #c4b5fd;
+            color: var(--text-purple);
         }
 
         .custom-select-wrap.active {
@@ -1510,7 +1539,7 @@
             border-radius: 9px;
             font-size: 13px;
             font-weight: 600;
-            color: #cbd5e1;
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.15s ease;
             gap: 10px;
@@ -1526,7 +1555,7 @@
         .custom-select-option.selected {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.28) 0%, rgba(124, 58, 237, 0.18) 100%);
             border-color: rgba(139, 92, 246, 0.4);
-            color: #c4b5fd;
+            color: var(--text-purple);
             font-weight: 700;
         }
 
@@ -1543,6 +1572,23 @@
         .custom-select-option.selected .custom-select-option-check {
             opacity: 1;
             transform: scale(1);
+        }
+
+        body.theme-light .custom-select-menu {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(139, 92, 246, 0.25);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1), 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        body.theme-light .custom-select-option:hover {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--text-primary);
+        }
+
+        body.theme-light .custom-select-option.selected {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%);
+            border-color: rgba(139, 92, 246, 0.25);
+            color: var(--text-purple);
         }
 
         .section-wrap:has(.custom-select-wrap.active),
@@ -1641,7 +1687,7 @@
             box-sizing: border-box;
         }
 
-        body.light-theme .aesthetic-modal-card {
+        body.theme-light .aesthetic-modal-card {
             background: linear-gradient(145deg, #ffffff, #f8fafc);
             border: 1px solid rgba(0, 0, 0, 0.1);
             box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.25), 0 0 30px rgba(139, 92, 246, 0.15);
@@ -1781,7 +1827,7 @@
             }
 
             100% {
-                border-color: #c4b5fd;
+                border-color: var(--text-purple);
                 box-shadow: 0 0 0 9999px rgba(5, 8, 18, 0.82), 0 0 35px rgba(196, 181, 253, 0.7);
             }
         }
@@ -1824,7 +1870,7 @@
             padding: 3px 9px;
             border-radius: var(--radius-pill);
             background: rgba(139, 92, 246, 0.2);
-            color: #c4b5fd;
+            color: var(--text-purple);
             border: 1px solid rgba(139, 92, 246, 0.35);
         }
 
@@ -1966,7 +2012,7 @@
         .footer-tour-btn:hover {
             background: rgba(139, 92, 246, 0.18);
             border-color: rgba(139, 92, 246, 0.35);
-            color: #c4b5fd;
+            color: var(--text-purple);
             transform: translateY(-1px);
         }
 
@@ -2151,7 +2197,7 @@
             background: rgba(139, 92, 246, 0.15);
             border-color: rgba(139, 92, 246, 0.4);
             transform: scale(1.08);
-            color: #c4b5fd;
+            color: var(--text-purple);
         }
 
         .providers-grid-container {
@@ -2273,7 +2319,7 @@
         .btn-config-scraper {
             background: rgba(139, 92, 246, 0.12);
             border: 1px solid rgba(139, 92, 246, 0.35);
-            color: #c4b5fd;
+            color: var(--text-purple);
             padding: 4px 10px;
             border-radius: var(--radius-pill);
             font-size: 11px;
@@ -2297,7 +2343,7 @@
         .scraper-override-badge {
             background: rgba(16, 185, 129, 0.15) !important;
             border-color: rgba(16, 185, 129, 0.35) !important;
-            color: #34d399 !important;
+            color: var(--text-success) !important;
         }
 
         /* ===== TOAST ISLAND NOTIFICATION ===== */
@@ -2398,9 +2444,9 @@
         }
 
         body.theme-light .bottom-nav-bar {
-            background: rgba(var(--overlay-base), 0.90);
+            background: rgba(255, 255, 255, 0.90);
             border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(var(--overlay-base), 0.95);
+            box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.95);
         }
 
         .bottom-nav-bar.scrolled {
@@ -2419,7 +2465,7 @@
             align-items: center;
             justify-content: center;
             gap: 2px;
-            color: #94a3b8;
+            color: var(--text-muted);
             text-decoration: none;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2481,7 +2527,7 @@
         }
 
         .nav-item.active .nav-icon svg {
-            color: #c4b5fd;
+            color: var(--text-purple);
             transform: translateY(-1px) scale(1.05);
             filter: drop-shadow(0 0 8px rgba(196, 181, 253, 0.5));
         }
@@ -3015,10 +3061,10 @@
                 <div class="hero-content" id="hero-slide-content">
                     <div class="hero-badge-row" id="hero-badges">
                         <span class="hero-pill-tag"
-                            style="background: rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.4); color: #c4b5fd;">⚡
+                            style="background: rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.4); color: var(--text-purple);">⚡
                             Meta-Sorter</span>
                         <span class="hero-pill-tag"
-                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">🟢
+                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">🟢
                             Zero-Buffering</span>
                     </div>
                     <h1 class="hero-title" id="hero-title">Chole Bhature</h1>
@@ -3189,7 +3235,7 @@
                                 style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Active
                                 Cloud Sync ID</span>
                             <span id="settings-sync-id"
-                                style="font-family: 'JetBrains Mono', monospace, sans-serif; font-size: 14px; font-weight: 700; color: #34d399; letter-spacing: 0.5px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                style="font-family: 'JetBrains Mono', monospace, sans-serif; font-size: 14px; font-weight: 700; color: var(--text-success); letter-spacing: 0.5px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                 loading...
                             </span>
                         </div>
@@ -3226,7 +3272,7 @@
                         </div>
                         <div class="input-bar-group" style="margin-top: 4px; flex-direction: column; gap: 10px;">
                             <select id="debridProvider" onchange="onSettingChanged()"
-                                style="width: 100%; font-weight: 600; cursor: pointer; font-family: inherit; color-scheme: dark;">
+                                style="width: 100%; font-weight: 600; cursor: pointer; font-family: inherit; color-scheme: light dark;">
                                 <option value="none">❌ None (Free Direct Links Only)</option>
                                 <option value="realdebrid">🟢 Real-Debrid (⚡ [RD+] Instant Check)</option>
                                 <option value="torbox">⚡ TorBox (⚡ [TB+] Instant Check)</option>
@@ -3273,7 +3319,7 @@
                                         style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.4); color: #38bdf8;">⚡
                                         No Debrid Needed</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399;">100%
+                                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: var(--text-success);">100%
                                         Free</span>
                                 </div>
                                 <div class="setting-description">
@@ -3290,7 +3336,7 @@
                                 </button>
                                 <a href="https://github.com/aiskendi/pencarimovie-server" target="_blank"
                                     rel="noopener noreferrer" class="pill-btn pill-btn-glass"
-                                    style="font-size: 11.5px; padding: 7px 14px; text-decoration: none; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;"
+                                    style="font-size: 11.5px; padding: 7px 14px; text-decoration: none; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px;"
                                     title="View PencariMovie Server on GitHub">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                                         <path
@@ -3305,7 +3351,7 @@
                         <div class="input-bar-group" style="margin-top: 4px; flex-direction: column; gap: 8px;">
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                                <label style="font-size: 12px; font-weight: 700; color: #94a3b8;">Telegram Stream Bridge
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted);">Telegram Stream Bridge
                                     Daemon URL:</label>
                                 <span style="font-size: 11px; color: var(--text-tertiary);">Default:
                                     <code>http://127.0.0.1:8088</code></span>
@@ -3394,7 +3440,7 @@
                                 <div class="setting-headline">
                                     🛡️ DNS-over-HTTPS (DoH) ISP Bypass
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">⚡
+                                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">⚡
                                         VPN-Free</span>
                                 </div>
                                 <div class="setting-description">Encrypts stream DNS lookups over HTTPS to effortlessly
@@ -3412,7 +3458,7 @@
                         </div>
                         <div id="doh-provider-wrap" class="input-bar-group" style="margin-top: 6px;">
                             <select id="dohProvider" onchange="onSettingChanged()"
-                                style="flex: 1; font-weight: 600; cursor: pointer; font-family: inherit; color-scheme: dark;">
+                                style="flex: 1; font-weight: 600; cursor: pointer; font-family: inherit; color-scheme: light dark;">
                                 <option value="cloudflare">⚡ Cloudflare (1.1.1.1) - Fastest</option>
                                 <option value="google">🌐 Google DNS (8.8.8.8) - Reliable</option>
                                 <option value="adguard">🛡️ AdGuard DNS - Privacy Focused</option>
@@ -3547,7 +3593,7 @@
                 <div class="section-label-bar">
                     <span class="section-label">🌐 Prioritize Audio Languages & Dubs</span>
                     <span id="lang-count-badge" class="tag-pill-badge"
-                        style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd;">0
+                        style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple);">0
                         Selected</span>
                 </div>
                 <div class="section-card">
@@ -3567,7 +3613,7 @@
                 <div class="section-label-bar">
                     <span class="section-label">🎬 Curated Discovery Catalogs</span>
                     <span class="tag-pill-badge"
-                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">✨
+                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">✨
                         Stremio Home Feed</span>
                 </div>
                 <div class="section-card">
@@ -3576,7 +3622,7 @@
                             <div class="setting-headline">
                                 🌟 Enable Curated Catalogs
                                 <span class="tag-pill-badge"
-                                    style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd;">Discovery
+                                    style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple);">Discovery
                                     Hub</span>
                             </div>
                             <div class="setting-description">Adds high-resolution discovery carousels to Stremio's home
@@ -3636,119 +3682,119 @@
                                 style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
                                 <span>🏷️ Nuvio & Stremio Sub-Categories Inside Catalogs</span>
                                 <span class="tag-pill-badge"
-                                    style="background: rgba(139, 92, 246, 0.15); color: #c4b5fd; font-size: 10px;">Native
+                                    style="background: rgba(139, 92, 246, 0.15); color: var(--text-purple); font-size: 10px;">Native
                                     Rows & Shelves</span>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11.5px;">
                                 <!-- 1. Popular Right Now Showcase -->
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    <span style="font-weight: 800; color: #ffffff; min-width: 135px;">⭐ Popular Right
+                                    <span style="font-weight: 800; color: var(--text-primary); min-width: 135px;">⭐ Popular Right
                                         Now:</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(139, 92, 246, 0.25); border: 1px solid #8b5cf6; color: #ffffff; font-weight: 700; box-shadow: 0 0 10px rgba(139, 92, 246, 0.35);">All</span>
+                                        style="background: rgba(139, 92, 246, 0.25); border: 1px solid #8b5cf6; color: var(--text-primary); font-weight: 700; box-shadow: 0 0 10px rgba(139, 92, 246, 0.35);">All</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); color: #c4b5fd; font-weight: 600;">Popular
+                                        style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); color: var(--text-purple); font-weight: 600;">Popular
                                         Movies</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); color: #c4b5fd; font-weight: 600;">Popular
+                                        style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); color: var(--text-purple); font-weight: 600;">Popular
                                         Series</span>
                                 </div>
                                 <!-- 2. Live TV Showcase (Matching Screenshot 2) -->
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    <span style="font-weight: 800; color: #ffffff; min-width: 135px;">📡 Live TV /
+                                    <span style="font-weight: 800; color: var(--text-primary); min-width: 135px;">📡 Live TV /
                                         IPTV:</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #ffffff; font-weight: 700; box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);">All</span>
+                                        style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: var(--text-primary); font-weight: 700; box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);">All</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">News</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">News</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Music</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Music</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Movies</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Movies</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Religious</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Religious</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Entertainment</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Entertainment</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Culture</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Culture</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Animation</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Animation</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Lifestyle</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Lifestyle</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Business</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Business</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">Sports</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">Sports</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7;">India</span>
+                                        style="background: rgba(16, 185, 129, 0.12); color: var(--text-green);">India</span>
                                 </div>
                                 <!-- 3. Indian Cinema Showcase -->
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    <span style="font-weight: 800; color: #ffffff; min-width: 135px;">🇮🇳 Indian
+                                    <span style="font-weight: 800; color: var(--text-primary); min-width: 135px;">🇮🇳 Indian
                                         Cinema:</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; color: #ffffff; font-weight: 700;">All
+                                        style="background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; color: var(--text-primary); font-weight: 700;">All
                                         Indian</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Bollywood
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Bollywood
                                         (Hindi)</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Tollywood
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Tollywood
                                         (Telugu)</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Kollywood
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Kollywood
                                         (Tamil)</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Malayalam</span>
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Malayalam</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Kannada</span>
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Kannada</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Punjabi</span>
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Punjabi</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(245, 158, 11, 0.12); color: #fcd34d;">Bengali</span>
+                                        style="background: rgba(245, 158, 11, 0.12); color: var(--text-amber);">Bengali</span>
                                 </div>
                                 <!-- 4. Anime Showcase -->
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    <span style="font-weight: 800; color: #ffffff; min-width: 135px;">⛩️ Trending
+                                    <span style="font-weight: 800; color: var(--text-primary); min-width: 135px;">⛩️ Trending
                                         Anime:</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.25); border: 1px solid #f43f5e; color: #ffffff; font-weight: 700;">All
+                                        style="background: rgba(244, 63, 94, 0.25); border: 1px solid #f43f5e; color: var(--text-primary); font-weight: 700;">All
                                         Anime</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.12); color: #fda4af;">Action</span>
+                                        style="background: rgba(244, 63, 94, 0.12); color: var(--text-rose);">Action</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.12); color: #fda4af;">Adventure</span>
+                                        style="background: rgba(244, 63, 94, 0.12); color: var(--text-rose);">Adventure</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.12); color: #fda4af;">Comedy</span>
+                                        style="background: rgba(244, 63, 94, 0.12); color: var(--text-rose);">Comedy</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.12); color: #fda4af;">Fantasy</span>
+                                        style="background: rgba(244, 63, 94, 0.12); color: var(--text-rose);">Fantasy</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.12); color: #fda4af;">Sci-Fi</span>
+                                        style="background: rgba(244, 63, 94, 0.12); color: var(--text-rose);">Sci-Fi</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(244, 63, 94, 0.12); color: #fda4af;">Mystery</span>
+                                        style="background: rgba(244, 63, 94, 0.12); color: var(--text-rose);">Mystery</span>
                                 </div>
                                 <!-- 5. Genre Feeds Showcase -->
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    <span style="font-weight: 800; color: #ffffff; min-width: 135px;">🎬 Movies &
+                                    <span style="font-weight: 800; color: var(--text-primary); min-width: 135px;">🎬 Movies &
                                         Series:</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Action</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Action</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Comedy</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Comedy</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Drama</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Drama</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Sci-Fi</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Sci-Fi</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Horror</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Horror</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Thriller</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Thriller</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Romance</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Romance</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">Crime</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">Crime</span>
                                     <span class="tag-pill-badge"
-                                        style="background: rgba(59, 130, 246, 0.12); color: #93c5fd;">+10 More</span>
+                                        style="background: rgba(59, 130, 246, 0.12); color: var(--text-blue);">+10 More</span>
                                 </div>
                             </div>
                         </div>
@@ -3761,7 +3807,7 @@
                 <div class="section-label-bar">
                     <span class="section-label">🎨 Stream Card Presentation Studio</span>
                     <span class="tag-pill-badge"
-                        style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd;">✨
+                        style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple);">✨
                         AI Scene Parser</span>
                 </div>
                 <div class="section-card">
@@ -3772,7 +3818,7 @@
                             <div class="setting-headline">
                                 ✨ Ultra-Clean Formatted Cards
                                 <span class="tag-pill-badge"
-                                    style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">🎯
+                                    style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">🎯
                                     Stremio / Nuvio</span>
                             </div>
                             <div class="setting-description">Converts messy raw scene filenames into high-contrast,
@@ -3842,7 +3888,7 @@
                                 Render</span>
                         </div>
                         <div id="live-card-preview"
-                            style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            style="background: var(--bg-input); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
                             <!-- Dynamically generated by JS -->
                         </div>
                     </div>
@@ -3876,7 +3922,7 @@
                             Quick-Add Presets</span>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button type="button" class="tag-pill-badge"
-                                style="cursor: pointer; padding: 6px 12px; font-size: 12px; font-weight: 600; background: rgba(139, 92, 246, 0.12); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd; transition: all 0.2s;"
+                                style="cursor: pointer; padding: 6px 12px; font-size: 12px; font-weight: 600; background: rgba(139, 92, 246, 0.12); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple); transition: all 0.2s;"
                                 onclick="setRepoPreset('https://codeberg.org/eclipsia/nuvio-plugin/raw/branch/main/manifest.json')">
                                 ⚡ Eclipsia
                             </button>
@@ -3890,7 +3936,7 @@
                 <div class="section-label-bar">
                     <span class="section-label">📦 Installed Repositories</span>
                     <span id="repo-count-badge" class="tag-pill-badge"
-                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">0
+                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">0
                         Repos</span>
                 </div>
                 <div id="installed-repos">
@@ -3905,7 +3951,7 @@
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span class="section-label">🔌 Scrapers & Providers</span>
                         <span id="provider-count-badge" class="tag-pill-badge"
-                            style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd;">0
+                            style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple);">0
                             Scrapers</span>
                     </div>
                     <div style="display: flex; gap: 8px;">
@@ -3940,7 +3986,7 @@
                 <div class="section-label-bar">
                     <span class="section-label">📡 Live TV & IPTV Engine</span>
                     <span class="tag-pill-badge"
-                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">⚡
+                        style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">⚡
                         HLS Probed</span>
                 </div>
                 <div class="section-card">
@@ -3949,7 +3995,7 @@
                             <div class="setting-headline">
                                 📡 Enable Live TV Catalogs
                                 <span class="tag-pill-badge"
-                                    style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd;">📺
+                                    style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple);">📺
                                     Stremio / Nuvio</span>
                             </div>
                             <div class="setting-description">Exposes the "Live TV / IPTV" discover catalog inside
@@ -4011,10 +4057,10 @@
                         </span>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span class="tag-pill-badge"
-                                style="font-size: 10px; padding: 2px 8px; background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #93c5fd;">HLS
+                                style="font-size: 10px; padding: 2px 8px; background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: var(--text-blue);">HLS
                                 / DASH / MP4</span>
                             <span class="tag-pill-badge"
-                                style="font-size: 10px; padding: 2px 8px; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">Live
+                                style="font-size: 10px; padding: 2px 8px; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: var(--text-success);">Live
                                 Inspector</span>
                         </div>
                     </div>
@@ -4076,7 +4122,7 @@
 
                         <!-- Advanced Options Drawer (Collapsible) -->
                         <div id="m3u-advanced-drawer"
-                            style="display: none; margin-top: 12px; margin-bottom: 14px; padding: 14px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-subtle); border-radius: 14px;">
+                            style="display: none; margin-top: 12px; margin-bottom: 14px; padding: 14px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 14px;">
                             <div
                                 style="font-size: 12px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
                                 <span>⚙️ Advanced Streaming & Ingest Settings</span>
@@ -4143,17 +4189,17 @@
                                             performance</span>
                                     </div>
                                     <select id="iptvLimit"
-                                        style="width: 100%; box-sizing: border-box; font-size: 12.5px; height: 38px; border-radius: 10px; background-color: #0e111a; border: 1px solid var(--border-subtle); color: #f8fafc; padding: 0 10px; color-scheme: dark; cursor: pointer;"
+                                        style="width: 100%; box-sizing: border-box; font-size: 12.5px; height: 38px; border-radius: 10px; background-color: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 0 10px; color-scheme: light dark; cursor: pointer;"
                                         onchange="onSettingChanged()">
-                                        <option value="0" style="background-color: #0e111a; color: #f8fafc;">All
+                                        <option value="0" style="background-color: var(--bg-surface); color: var(--text-primary);">All
                                             Channels (Unlimited)</option>
-                                        <option value="100" style="background-color: #0e111a; color: #f8fafc;">Top 100
+                                        <option value="100" style="background-color: var(--bg-surface); color: var(--text-primary);">Top 100
                                             Channels</option>
-                                        <option value="250" style="background-color: #0e111a; color: #f8fafc;">Top 250
+                                        <option value="250" style="background-color: var(--bg-surface); color: var(--text-primary);">Top 250
                                             Channels (Firestick / TV)</option>
-                                        <option value="500" style="background-color: #0e111a; color: #f8fafc;">Top 500
+                                        <option value="500" style="background-color: var(--bg-surface); color: var(--text-primary);">Top 500
                                             Channels</option>
-                                        <option value="1000" style="background-color: #0e111a; color: #f8fafc;">Top 1000
+                                        <option value="1000" style="background-color: var(--bg-surface); color: var(--text-primary);">Top 1000
                                             Channels</option>
                                     </select>
                                     <div style="font-size: 10.5px; color: var(--text-tertiary); margin-top: 4px;">
@@ -4172,7 +4218,7 @@
                                     <span
                                         style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></span>
                                     <span
-                                        style="font-size: 13px; font-weight: 800; color: #34d399; letter-spacing: 0.5px;">PLAYLIST
+                                        style="font-size: 13px; font-weight: 800; color: var(--text-success); letter-spacing: 0.5px;">PLAYLIST
                                         CONNECTED & ACTIVE</span>
                                 </div>
                                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
@@ -4202,15 +4248,15 @@
                             <div
                                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px;">
                                 <div
-                                    style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 10px; text-align: center;">
+                                    style="background: var(--bg-input); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 10px; text-align: center;">
                                     <div id="stat-m3u-channels"
-                                        style="font-size: 20px; font-weight: 900; color: #34d399;">0</div>
+                                        style="font-size: 20px; font-weight: 900; color: var(--text-success);">0</div>
                                     <div
                                         style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
                                         Channels Loaded</div>
                                 </div>
                                 <div
-                                    style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 10px; text-align: center;">
+                                    style="background: var(--bg-input); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 10px; text-align: center;">
                                     <div id="stat-m3u-cats" style="font-size: 20px; font-weight: 900; color: #38bdf8;">0
                                     </div>
                                     <div
@@ -4218,7 +4264,7 @@
                                         Categories</div>
                                 </div>
                                 <div
-                                    style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 10px; text-align: center;">
+                                    style="background: var(--bg-input); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 10px; text-align: center;">
                                     <div id="stat-m3u-status"
                                         style="font-size: 20px; font-weight: 900; color: #a78bfa;">Synced</div>
                                     <div
@@ -4250,7 +4296,7 @@
                                         style="font-size: 14px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
                                         <span>📺 Live Channel Explorer</span>
                                         <span id="explorer-count-badge" class="tag-pill-badge"
-                                            style="font-size: 10.5px; padding: 2px 8px; background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); color: #c4b5fd;">0
+                                            style="font-size: 10.5px; padding: 2px 8px; background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); color: var(--text-purple);">0
                                             Channels</span>
                                     </div>
                                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Real-time
@@ -4362,7 +4408,7 @@
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span class="section-label">📊 Telemetry & Scraper Health</span>
                         <span class="tag-pill-badge"
-                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">
+                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">
                             <span class="pulse-dot"></span> Live Swarm
                         </span>
                     </div>
@@ -4434,7 +4480,7 @@
                                     <div style="width: 99%; height: 100%; background: #10b981; border-radius: 2px;">
                                     </div>
                                 </div>
-                                <span style="font-size: 11.5px; color: #34d399; font-weight: 600;">🛡️ Dead Links
+                                <span style="font-size: 11.5px; color: var(--text-success); font-weight: 600;">🛡️ Dead Links
                                     Blocked</span>
                             </div>
                         </div>
@@ -4482,7 +4528,7 @@
                 </div>
                 <div class="section-card" style="text-align: center; padding: 32px 20px;">
                     <div style="font-size: 42px; margin-bottom: 12px;">🛡️</div>
-                    <h2 style="font-size: 19px; font-weight: 800; color: #f8fafc; margin-bottom: 8px;">Admin Console
+                    <h2 style="font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">Admin Console
                         Locked</h2>
                     <p
                         style="font-size: 13px; color: var(--text-muted); max-width: 460px; margin: 0 auto 20px auto; line-height: 1.55;">
@@ -4516,9 +4562,9 @@
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 16px; font-weight: 800; color: #f8fafc;">🛡️ Master Admin Console</span>
+                        <span style="font-size: 16px; font-weight: 800; color: var(--text-primary);">🛡️ Master Admin Console</span>
                         <span class="tag-pill-badge"
-                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">Authenticated</span>
+                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">Authenticated</span>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button class="pill-btn pill-btn-glass" onclick="lockAdminConsole()"
@@ -4534,7 +4580,7 @@
                     <div class="section-label-bar">
                         <span class="section-label">☁️ Cloud Host Platform</span>
                         <span id="cloud-host-active-pill" class="tag-pill-badge"
-                            style="display: none; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">🟢
+                            style="display: none; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">🟢
                             Connected</span>
                     </div>
                     <div class="section-card" style="padding: 16px 18px;">
@@ -4546,7 +4592,7 @@
                                     🟣</div>
                                 <div style="min-width: 0;">
                                     <div id="cloud-host-title"
-                                        style="font-size: 13px; font-weight: 700; color: #f8fafc; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        style="font-size: 13px; font-weight: 700; color: var(--text-primary); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                         Detecting Host...</div>
                                     <div id="cloud-host-subtitle"
                                         style="font-size: 11px; color: var(--text-muted); line-height: 1.3; margin-top: 1px;">
@@ -4608,7 +4654,7 @@
                                         style="font-size: 10.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
                                         RAM Safety Guard</div>
                                     <div class="admin-matrix-val" id="render-matrix-ram-val"
-                                        style="font-size: 17px; font-weight: 800; color: #34d399; margin-top: 4px;">&lt;
+                                        style="font-size: 17px; font-weight: 800; color: var(--text-success); margin-top: 4px;">&lt;
                                         150 MB</div>
                                     <div class="admin-matrix-sub" id="render-matrix-ram-sub"
                                         style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">512MB
@@ -4647,7 +4693,7 @@
                         <div class="section-label-bar">
                             <span class="section-label">🧠 Render 512MB RAM & Resource Safety Gauge</span>
                             <span class="tag-pill-badge"
-                                style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">🛡️
+                                style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">🛡️
                                 Auto-Prune &gt; 360MB</span>
                         </div>
                         <div class="section-card">
@@ -4663,7 +4709,7 @@
                             <div style="margin-bottom: 12px;">
                                 <div
                                     style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 6px;">
-                                    <span id="gauge-render-mem-headline" style="color: #34d399;">🧠 Memory RSS: ~48 MB /
+                                    <span id="gauge-render-mem-headline" style="color: var(--text-success);">🧠 Memory RSS: ~48 MB /
                                         512 MB</span>
                                     <span style="color: var(--text-muted);">Ceiling: 512 MB</span>
                                 </div>
@@ -4680,7 +4726,7 @@
                                     style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px; flex-wrap: wrap; gap: 4px;">
                                     <span id="gauge-render-rss-txt">📊 RSS: ~48 MB</span>
                                     <span id="gauge-render-heap-txt">💾 Heap Used: ~32 MB</span>
-                                    <span id="gauge-render-buffer-txt" style="color: #34d399; font-weight: 700;">🟢 464
+                                    <span id="gauge-render-buffer-txt" style="color: var(--text-success); font-weight: 700;">🟢 464
                                         MB Safe Headroom</span>
                                 </div>
                             </div>
@@ -4703,7 +4749,7 @@
                                     style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(var(--overlay-base), 0.06); padding-bottom: 10px; gap: 12px; flex-wrap: wrap;">
                                     <div style="flex: 1 1 200px; min-width: 0;">
                                         <div
-                                            style="font-weight: 700; font-size: 13px; color: #f8fafc; line-height: 1.3;">
+                                            style="font-weight: 700; font-size: 13px; color: var(--text-primary); line-height: 1.3;">
                                             15-Min Inactivity Keep-Alive Heartbeat</div>
                                         <div id="render-keepalive-sub"
                                             style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin-top: 2px;">
@@ -4731,7 +4777,7 @@
                                     style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(var(--overlay-base), 0.06); padding-bottom: 10px; gap: 12px; flex-wrap: wrap;">
                                     <div style="flex: 1 1 200px; min-width: 0;">
                                         <div
-                                            style="font-weight: 700; font-size: 13px; color: #f8fafc; line-height: 1.3;">
+                                            style="font-weight: 700; font-size: 13px; color: var(--text-primary); line-height: 1.3;">
                                             Monthly Free Instance Hours</div>
                                         <div id="budget-render-hours-sub"
                                             style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin-top: 2px;">
@@ -4740,7 +4786,7 @@
                                     </div>
                                     <div style="text-align: right; flex-shrink: 0;">
                                         <span id="budget-render-hours-val"
-                                            style="font-size: 11px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">750h
+                                            style="font-size: 11px; font-weight: 700; color: var(--text-success); background: rgba(16, 185, 129, 0.12); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">750h
                                             / Month Free</span>
                                     </div>
                                 </div>
@@ -4749,7 +4795,7 @@
                                     style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
                                     <div style="flex: 1 1 200px; min-width: 0;">
                                         <div
-                                            style="font-weight: 700; font-size: 13px; color: #f8fafc; line-height: 1.3;">
+                                            style="font-weight: 700; font-size: 13px; color: var(--text-primary); line-height: 1.3;">
                                             Dedicated Health Check Endpoints</div>
                                         <div
                                             style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; margin-top: 2px;">
@@ -4825,7 +4871,7 @@
                                             style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Render
                                             Account Status</span>
                                         <span id="render-connected-account-name"
-                                            style="font-size: 13.5px; font-weight: 700; color: #34d399;">Connected (Live
+                                            style="font-size: 13.5px; font-weight: 700; color: var(--text-success);">Connected (Live
                                             Sync Active)</span>
                                     </div>
                                 </div>
@@ -4863,7 +4909,7 @@
                                     <div class="setting-headline">
                                         ⚡ Universal Server-Wide Eco Optimizer
                                         <span class="tag-pill-badge"
-                                            style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #c4b5fd;">Applies
+                                            style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: var(--text-purple);">Applies
                                             to All Users</span>
                                     </div>
                                     <div class="setting-description">Uses instant speed heuristics (&lt; 5ms) instead of
@@ -4892,7 +4938,7 @@
                                         style="font-size: 10.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
                                         CPU Saved</div>
                                     <div class="admin-matrix-val" id="telemetry-cpu-saved"
-                                        style="font-size: 17px; font-weight: 800; color: #34d399; margin-top: 4px;">
+                                        style="font-size: 17px; font-weight: 800; color: var(--text-success); margin-top: 4px;">
                                         ~96.4%</div>
                                     <div class="admin-matrix-sub" id="telemetry-cpu-saved-sub"
                                         style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">~4.5s ➔
@@ -4946,7 +4992,7 @@
                             <div style="margin-bottom: 12px;">
                                 <div
                                     style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 6px;">
-                                    <span id="gauge-exec-headline" style="color: #34d399;">⏱️ Execution: ~2.12s</span>
+                                    <span id="gauge-exec-headline" style="color: var(--text-success);">⏱️ Execution: ~2.12s</span>
                                     <span style="color: var(--text-muted);">Limit: 10.0s</span>
                                 </div>
                                 <div
@@ -4962,7 +5008,7 @@
                                     style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px; flex-wrap: wrap; gap: 4px;">
                                     <span id="gauge-scraping-txt">📦 Scraping: ~2.10s</span>
                                     <span id="gauge-sorting-txt">⚡ Sorting: ~0.02s</span>
-                                    <span id="gauge-buffer-txt" style="color: #34d399; font-weight: 700;">🟢 7.88s
+                                    <span id="gauge-buffer-txt" style="color: var(--text-success); font-weight: 700;">🟢 7.88s
                                         Buffer</span>
                                 </div>
                             </div>
@@ -4994,12 +5040,12 @@
                                     <div
                                         style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                                         <div
-                                            style="font-weight: 700; font-size: 13px; color: #f8fafc; line-height: 1.3; display: flex; align-items: center; gap: 6px;">
+                                            style="font-weight: 700; font-size: 13px; color: var(--text-primary); line-height: 1.3; display: flex; align-items: center; gap: 6px;">
                                             <span>⚡</span> Fluid Active CPU Budget
                                         </div>
                                         <div style="text-align: right; flex-shrink: 0;">
                                             <span id="budget-cpu-val"
-                                                style="font-size: 11px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">0.00h
+                                                style="font-size: 11px; font-weight: 700; color: var(--text-success); background: rgba(16, 185, 129, 0.12); padding: 4px 8px; border-radius: 6px; white-space: nowrap;">0.00h
                                                 / 4.0h</span>
                                         </div>
                                     </div>
@@ -5007,7 +5053,7 @@
                                     <div
                                         style="height: 8px; background: rgba(var(--overlay-base), 0.06); border-radius: 9999px; overflow: hidden; margin: 8px 0 6px 0; position: relative;">
                                         <div id="budget-cpu-bar"
-                                            style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 9999px; transition: width 0.4s ease;">
+                                            style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, var(--text-success)); border-radius: 9999px; transition: width 0.4s ease;">
                                         </div>
                                     </div>
                                     <div
@@ -5015,7 +5061,7 @@
                                         <div id="budget-cpu-sub" style="line-height: 1.35;">4.0 Hours free per billing
                                             month</div>
                                         <div id="budget-cpu-headroom"
-                                            style="color: #34d399; font-weight: 600; white-space: nowrap;">100% Free
+                                            style="color: var(--text-success); font-weight: 600; white-space: nowrap;">100% Free
                                             Headroom</div>
                                     </div>
                                 </div>
@@ -5025,7 +5071,7 @@
                                     <div
                                         style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                                         <div
-                                            style="font-weight: 700; font-size: 13px; color: #f8fafc; line-height: 1.3; display: flex; align-items: center; gap: 6px;">
+                                            style="font-weight: 700; font-size: 13px; color: var(--text-primary); line-height: 1.3; display: flex; align-items: center; gap: 6px;">
                                             <span>🚀</span> Serverless Invocations
                                         </div>
                                         <div style="text-align: right; flex-shrink: 0;">
@@ -5056,7 +5102,7 @@
                                     <div
                                         style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                                         <div
-                                            style="font-weight: 700; font-size: 13px; color: #f8fafc; line-height: 1.3; display: flex; align-items: center; gap: 6px;">
+                                            style="font-weight: 700; font-size: 13px; color: var(--text-primary); line-height: 1.3; display: flex; align-items: center; gap: 6px;">
                                             <span>🌐</span> Edge Network Bandwidth
                                         </div>
                                         <div style="text-align: right; flex-shrink: 0;">
@@ -5091,8 +5137,8 @@
                                     <div id="budget-instance-telemetry"
                                         style="display: flex; align-items: center; gap: 5px;">
                                         <span>⚡</span> Instance Traffic: <span id="budget-instance-invocations"
-                                            style="color: #f8fafc; font-weight: 700;">0 calls</span> (<span
-                                            id="budget-instance-cpu" style="color: #34d399; font-weight: 700;">~0.00h
+                                            style="color: var(--text-primary); font-weight: 700;">0 calls</span> (<span
+                                            id="budget-instance-cpu" style="color: var(--text-success); font-weight: 700;">~0.00h
                                             CPU</span>)
                                     </div>
                                 </div>
@@ -5118,7 +5164,7 @@
                                     <div class="setting-headline">
                                         🔑 Vercel Personal Access Token
                                         <span class="tag-pill-badge"
-                                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">Optional
+                                            style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--text-success);">Optional
                                             Live Sync</span>
                                     </div>
                                     <div class="setting-description">Connect your free read-only Vercel token from <a
@@ -5159,7 +5205,7 @@
                                             style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Vercel
                                             Account Status</span>
                                         <span id="vercel-connected-account-name"
-                                            style="font-size: 13.5px; font-weight: 700; color: #34d399;">Connected (Live
+                                            style="font-size: 13.5px; font-weight: 700; color: var(--text-success);">Connected (Live
                                             Sync Active)</span>
                                     </div>
                                 </div>
@@ -5199,7 +5245,7 @@
                                     style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
                                     Active Configs</div>
                                 <div id="admin-total-configs"
-                                    style="font-size: 20px; font-weight: 800; color: #f8fafc; margin-top: 4px;">--</div>
+                                    style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-top: 4px;">--</div>
                             </div>
                             <div
                                 style="background: rgba(var(--overlay-base), 0.03); border: 1px solid rgba(var(--overlay-base), 0.08); border-radius: 12px; padding: 12px;">
@@ -5224,7 +5270,7 @@
                                     style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
                                     Server Uptime</div>
                                 <div id="admin-uptime-str"
-                                    style="font-size: 16px; font-weight: 800; color: #34d399; margin-top: 6px;">--</div>
+                                    style="font-size: 16px; font-weight: 800; color: var(--text-success); margin-top: 6px;">--</div>
                             </div>
                         </div>
 
@@ -5234,7 +5280,7 @@
                                 style="font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
                                 Active Quarantine Strikes</div>
                             <div id="admin-quarantine-list"
-                                style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.25); border-radius: 8px; padding: 8px 12px;">
+                                style="font-size: 12px; color: var(--text-muted); background: var(--bg-input); border-radius: 8px; padding: 8px 12px;">
                                 No scrapers currently quarantined (All healthy)
                             </div>
                         </div>
@@ -5401,12 +5447,12 @@
                                 style="font-size: 9.5px; padding: 1px 6px;">🟢 Default</span>
                         </div>
                         <div id="scraper-current-active-url"
-                            style="font-size: 13px; font-weight: 600; color: #c4b5fd; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+                            style="font-size: 13px; font-weight: 600; color: var(--text-purple); word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
                             Detecting...
                         </div>
                     </div>
                     <button type="button" class="pill-btn pill-btn-glass" onclick="prefillCurrentDomain()"
-                        style="padding: 5px 10px; font-size: 11px; flex-shrink: 0; color: #c4b5fd; border-color: rgba(139, 92, 246, 0.35);"
+                        style="padding: 5px 10px; font-size: 11px; flex-shrink: 0; color: var(--text-purple); border-color: rgba(139, 92, 246, 0.35);"
                         title="Copy into Edit Input">
                         ✏️ Edit
                     </button>
@@ -5467,7 +5513,7 @@
                 <div
                     style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 8px 12px; margin-top: 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                     <label for="scraper-global-override-toggle"
-                        style="font-size: 11px; font-weight: 700; color: #34d399; margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        style="font-size: 11px; font-weight: 700; color: var(--text-success); margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                         <span>👑</span> Apply Universally to All Addon Users
                     </label>
                     <div class="switch-toggle" style="transform: scale(0.85); transform-origin: right center;">
@@ -5505,7 +5551,7 @@
                         ⚡</div>
                     <div>
                         <h3 class="aesthetic-modal-title"
-                            style="margin: 0; font-size: 17px; text-align: left; font-weight: 800; color: #f8fafc;">
+                            style="margin: 0; font-size: 17px; text-align: left; font-weight: 800; color: var(--text-primary);">
                             Telegram Cloud Streaming Guide</h3>
                         <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">Powered by
                             aiskendi/pencarimovie-server • Setup & Daemon Tutorial</span>
@@ -5533,7 +5579,7 @@
                             ⭐ Star on GitHub ↗
                         </a>
                     </div>
-                    <div style="font-size: 11.5px; color: #cbd5e1; line-height: 1.55;">
+                    <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.55;">
                         This entire Telegram cloud streaming capability was adapted and integrated from the exceptional
                         open-source project created by <b><a href="https://github.com/aiskendi" target="_blank"
                                 rel="noopener noreferrer"
@@ -5550,10 +5596,10 @@
                 <div
                     style="background: rgba(var(--overlay-base), 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 14px;">
                     <div
-                        style="font-size: 13px; font-weight: 700; color: #34d399; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        style="font-size: 13px; font-weight: 700; color: var(--text-success); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                         <span>🟢</span> Option 1: Automatic Playback (No Setup Needed!)
                     </div>
-                    <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.5;">
+                    <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
                         If you do not have a local daemon running, <b>you don't need to do anything</b>. When you click
                         any <code>⚡ Telegram</code> stream in Stremio or Nuvio, Chole Bhature's resolver automatically
                         issues a secure redirect to the official <b>PencariMovie Web Player</b>
@@ -5569,7 +5615,7 @@
                         style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                         <span>🚀</span> Option 2: High-Speed Direct In-App Streaming (With Daemon)
                     </div>
-                    <div style="font-size: 11.5px; color: #94a3b8; line-height: 1.5;">
+                    <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
                         To play Telegram streams <b>directly inside the Stremio / Nuvio video player</b> with fast
                         timeline seeking (<code>HTTP 206 Partial Content</code>), you can connect a local or remote
                         MTProto streaming daemon.
@@ -5630,7 +5676,7 @@
                         style="font-size: 13px; font-weight: 700; color: #fbbf24; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                         <span>🛠️</span> How to Run the MTProto Streaming Daemon
                     </div>
-                    <ol style="margin: 0; padding-left: 20px; font-size: 11.5px; color: #94a3b8; line-height: 1.6;">
+                    <ol style="margin: 0; padding-left: 20px; font-size: 11.5px; color: var(--text-muted); line-height: 1.6;">
                         <li><b>Clone or Download:</b> Visit <a href="https://github.com/aiskendi/pencarimovie-server"
                                 target="_blank" rel="noopener noreferrer"
                                 style="color: #38bdf8; text-decoration: underline;">github.com/aiskendi/pencarimovie-server</a>
@@ -5840,7 +5886,7 @@
                         <div style="font-size: 12px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
                             <span>🟢 FAST (142ms) • Torrentio | 2160p • BluRay • REMUX</span>
                         </div>
-                        <span style="font-size: 10px; font-weight: 700; color: #94a3b8; background: rgba(var(--overlay-base), 0.08); padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(var(--overlay-base), 0.12);">Raw Scene Name</span>
+                        <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); background: rgba(var(--overlay-base), 0.08); padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(var(--overlay-base), 0.12);">Raw Scene Name</span>
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted); font-family: monospace; line-height: 1.45; word-break: break-all; margin-top: 4px;">
                         Oppenheimer.2023.2160p.UHD.BluRay.x265.10bit.TrueHD.7.1.Atmos.DV.HDR10+.REMUX-FraMeSToR.mkv
@@ -5869,14 +5915,14 @@
                     <div style="font-size: 12px; font-weight: 700; color: #4ade80; display: flex; align-items: center; gap: 6px;">
                         <span>🟢 FAST (142ms) • Torrentio • 4K UHD • DV • Atmos</span>
                     </div>
-                    <span style="font-size: 10px; font-weight: 700; color: #c4b5fd; background: rgba(139, 92, 246, 0.2); padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.35);">Stream Header</span>
+                    <span style="font-size: 10px; font-weight: 700; color: var(--text-purple); background: rgba(139, 92, 246, 0.2); padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.35);">Stream Header</span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.45;">
-                    <div style="font-weight: 700; color: #f8fafc;">
-                        🎬 Oppenheimer (2023) <span style="color: #94a3b8; font-weight: 600;">[${line1Tags.join(' • ')}]</span>
+                    <div style="font-weight: 700; color: var(--text-primary);">
+                        🎬 Oppenheimer (2023) <span style="color: var(--text-muted); font-weight: 600;">[${line1Tags.join(' • ')}]</span>
                     </div>
                     ${showOrig ? `
-                    <div style="color: #94a3b8; font-size: 11px; font-family: monospace; word-break: break-all; opacity: 0.9;">
+                    <div style="color: var(--text-muted); font-size: 11px; font-family: monospace; word-break: break-all; opacity: 0.9;">
                         📄 Oppenheimer.2023.2160p.UHD.BluRay.x265.10bit.TrueHD.7.1.Atmos.DV.HDR10+.REMUX-FraMeSToR.mkv
                     </div>` : ''}
                     <div style="color: #38bdf8; font-size: 12px; font-weight: 600;">
@@ -5885,7 +5931,7 @@
                     <div style="color: #c084fc; font-size: 11.5px; font-weight: 500;">
                         🌐 ${line3Langs.join(' • ')}
                     </div>
-                    <div style="color: #94a3b8; font-size: 11px; margin-top: 2px;">
+                    <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
                         ${line4Meta.join(' • ')}
                     </div>
                 </div>
@@ -5922,7 +5968,7 @@
                 badge.innerText = `${count} Selected`;
                 badge.style.background = count > 0 ? 'rgba(139, 92, 246, 0.2)' : 'rgba(var(--overlay-base), 0.06)';
                 badge.style.borderColor = count > 0 ? 'rgba(139, 92, 246, 0.45)' : 'rgba(var(--overlay-base), 0.12)';
-                badge.style.color = count > 0 ? '#c4b5fd' : 'var(--text-muted)';
+                badge.style.color = count > 0 ? 'var(--text-purple)' : 'var(--text-muted)';
             }
 
             container.innerHTML = SUPPORTED_LANGUAGES.map(lang => {
@@ -6717,7 +6763,7 @@
                     renderBadge.innerText = '🟢 Universal Eco: Active (All Users)';
                     renderBadge.style.background = 'rgba(16, 185, 129, 0.15)';
                     renderBadge.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                    renderBadge.style.color = '#34d399';
+                    renderBadge.style.color = 'var(--text-success)';
                 } else {
                     renderBadge.innerText = '⚪ Universal Eco: Disabled';
                     renderBadge.style.background = 'rgba(148, 163, 184, 0.12)';
@@ -6764,7 +6810,7 @@
             if (gRenderHeap) gRenderHeap.innerText = `💾 Heap: ~${heapMB} MB`;
             if (gRenderBufTxt) {
                 gRenderBufTxt.innerText = `🟢 ${freeHeadroom} MB Safe Headroom`;
-                gRenderBufTxt.style.color = freeHeadroom > 150 ? '#34d399' : '#facc15';
+                gRenderBufTxt.style.color = freeHeadroom > 150 ? 'var(--text-success)' : '#facc15';
             }
 
             // Render Keep-Alive Heartbeat Toggle
@@ -6834,7 +6880,7 @@
                     badge.innerText = '🟢 Universal Eco: Active (All Users)';
                     badge.style.background = 'rgba(16, 185, 129, 0.15)';
                     badge.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                    badge.style.color = '#34d399';
+                    badge.style.color = 'var(--text-success)';
                 } else {
                     badge.innerText = '⚪ Universal Eco: Disabled';
                     badge.style.background = 'rgba(148, 163, 184, 0.12)';
@@ -6882,7 +6928,7 @@
             if (sortTxt) sortTxt.innerText = isEco ? `⚡ Sorting: ~${lastSortSec}s (Eco)` : `⚡ Sorting: ~${lastSortSec}s (Probed)`;
             if (bufferTxt) {
                 bufferTxt.innerText = `🟢 ${bufferSec}s Buffer`;
-                bufferTxt.style.color = bufferSec > 5.0 ? '#34d399' : (bufferSec > 2.0 ? '#facc15' : '#f87171');
+                bufferTxt.style.color = bufferSec > 5.0 ? 'var(--text-success)' : (bufferSec > 2.0 ? '#facc15' : '#f87171');
             }
 
             // 3. Vercel Monthly Budget
@@ -6919,10 +6965,10 @@
                     const uname = ov.username || 'Vercel User';
                     const pName = ov.project?.name || null;
                     budgetSyncBadge.title = `Connected to @${uname}${pName ? ' • Project: ' + pName : ''}`;
-                    budgetSyncBadge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#34d399; border-radius:50%; margin-right:4px; flex-shrink:0;"></span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Synced: @${uname}</span>`;
+                    budgetSyncBadge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:var(--text-success); border-radius:50%; margin-right:4px; flex-shrink:0;"></span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Synced: @${uname}</span>`;
                     budgetSyncBadge.style.background = 'rgba(16, 185, 129, 0.15)';
                     budgetSyncBadge.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                    budgetSyncBadge.style.color = '#34d399';
+                    budgetSyncBadge.style.color = 'var(--text-success)';
                 } else {
                     budgetSyncBadge.innerText = '⚪ Local Profiler';
                     budgetSyncBadge.title = 'Built-in Local Profiler';
@@ -6940,14 +6986,14 @@
 
             if (budgetCpu) {
                 budgetCpu.innerText = `${fluidCpuUsed.toFixed(2)}h / ${cpuLimit.toFixed(1)}h (${cpuPct.toFixed(1)}%)`;
-                budgetCpu.style.color = cpuPct > 85 ? '#f87171' : (cpuPct > 65 ? '#facc15' : '#34d399');
+                budgetCpu.style.color = cpuPct > 85 ? '#f87171' : (cpuPct > 65 ? '#facc15' : 'var(--text-success)');
                 budgetCpu.style.background = cpuPct > 85 ? 'rgba(239, 68, 68, 0.15)' : (cpuPct > 65 ? 'rgba(250, 204, 21, 0.15)' : 'rgba(16, 185, 129, 0.12)');
             }
             if (budgetCpuBar) {
                 budgetCpuBar.style.width = `${Math.max(cpuPct, fluidCpuUsed > 0 ? 1.5 : 0)}%`;
                 budgetCpuBar.style.background = cpuPct > 85
                     ? 'linear-gradient(90deg, #ef4444, #dc2626)'
-                    : (cpuPct > 65 ? 'linear-gradient(90deg, #f59e0b, #facc15)' : 'linear-gradient(90deg, #10b981, #34d399)');
+                    : (cpuPct > 65 ? 'linear-gradient(90deg, #f59e0b, #facc15)' : 'linear-gradient(90deg, #10b981, var(--text-success))');
             }
             if (budgetCpuSub) {
                 if (isOfficial) {
@@ -7049,7 +7095,7 @@
                     apiBadge.innerText = `🟢 Connected: @${username} (${apiScope})`;
                     apiBadge.style.background = 'rgba(16, 185, 129, 0.15)';
                     apiBadge.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                    apiBadge.style.color = '#34d399';
+                    apiBadge.style.color = 'var(--text-success)';
                 }
                 if (inputBox) inputBox.style.display = 'none';
                 if (connectedBox) connectedBox.style.display = 'flex';
@@ -7658,7 +7704,7 @@
                             `).join('');
                         } else {
                             qListEl.innerHTML = '🟢 No scrapers currently quarantined (All healthy)';
-                            qListEl.style.color = '#34d399';
+                            qListEl.style.color = 'var(--text-success)';
                         }
                     }
 
@@ -8353,7 +8399,7 @@
                     statusChipEl.innerText = '🟣 Custom Override Active';
                     statusChipEl.style.background = 'rgba(139, 92, 246, 0.2)';
                     statusChipEl.style.borderColor = 'rgba(139, 92, 246, 0.4)';
-                    statusChipEl.style.color = '#c4b5fd';
+                    statusChipEl.style.color = 'var(--text-purple)';
                 }
             } else if (scraperInfoCache.has(providerName)) {
                 const infoData = scraperInfoCache.get(providerName);
@@ -8362,7 +8408,7 @@
                     statusChipEl.innerText = '🟢 Default Repo Domain';
                     statusChipEl.style.background = 'rgba(16, 185, 129, 0.15)';
                     statusChipEl.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                    statusChipEl.style.color = '#34d399';
+                    statusChipEl.style.color = 'var(--text-success)';
                 }
                 if (domainInput && !domainInput.value) domainInput.placeholder = `e.g. ${infoData.defaultDomain}`;
                 if (mirrorsInput && !mirrorsInput.value && Array.isArray(infoData.detectedMirrors) && infoData.detectedMirrors.length > 1) {
@@ -8391,7 +8437,7 @@
                                     statusChipEl.innerText = '🟢 Default Repo Domain';
                                     statusChipEl.style.background = 'rgba(16, 185, 129, 0.15)';
                                     statusChipEl.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                                    statusChipEl.style.color = '#34d399';
+                                    statusChipEl.style.color = 'var(--text-success)';
                                 }
                                 if (domainInput && !domainInput.value) domainInput.placeholder = `e.g. ${infoData.defaultDomain}`;
                                 if (mirrorsInput && !mirrorsInput.value && Array.isArray(infoData.detectedMirrors) && infoData.detectedMirrors.length > 1) {
@@ -8404,7 +8450,7 @@
                                 statusChipEl.innerText = '🟢 Default';
                                 statusChipEl.style.background = 'rgba(16, 185, 129, 0.15)';
                                 statusChipEl.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                                statusChipEl.style.color = '#34d399';
+                                statusChipEl.style.color = 'var(--text-success)';
                             }
                         }
                     } catch (e) {
@@ -8490,7 +8536,7 @@
                     resultBox.innerHTML = `
                         <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 10px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: #34d399; font-weight: 700;">🟢 Scraper Online</span>
+                                <span style="color: var(--text-success); font-weight: 700;">🟢 Scraper Online</span>
                                 <span style="font-size: 11px; color: #a78bfa; background: rgba(139,92,246,0.15); padding: 2px 8px; border-radius: 9999px;">${data.latencyMs}ms</span>
                             </div>
                             <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 4px;">
@@ -8884,7 +8930,7 @@
 
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: var(--text-muted);">
                                     <div style="display: flex; gap: 10px;">
-                                        <span style="color: #34d399;">🟢 ${p.fast} Fast (&lt;500ms)</span>
+                                        <span style="color: var(--text-success);">🟢 ${p.fast} Fast (&lt;500ms)</span>
                                         <span style="color: #fbbf24;">🟡 ${p.slow} Slow</span>
                                         <span style="color: #f87171;">🔴 ${p.dead} Dead</span>
                                     </div>
@@ -8994,8 +9040,8 @@
         const HERO_SLIDES = [
             {
                 badges: [
-                    { text: '⚡ Meta-Sorter', bg: 'rgba(139, 92, 246, 0.2)', border: 'rgba(139, 92, 246, 0.4)', color: '#c4b5fd' },
-                    { text: '🟢 Zero-Buffering', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', color: '#34d399' }
+                    { text: '⚡ Meta-Sorter', bg: 'rgba(139, 92, 246, 0.2)', border: 'rgba(139, 92, 246, 0.4)', color: 'var(--text-purple)' },
+                    { text: '🟢 Zero-Buffering', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', color: 'var(--text-success)' }
                 ],
                 title: 'Chole Bhature',
                 meta: ['Movie', 'Series', 'Anime', 'Debrid ⚡', '2026'],
@@ -9008,8 +9054,8 @@
             },
             {
                 badges: [
-                    { text: '💎 Debrid 4K', bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.4)', color: '#fcd34d' },
-                    { text: '⚡ 10Gbps Direct', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.35)', color: '#c4b5fd' }
+                    { text: '💎 Debrid 4K', bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.4)', color: 'var(--text-amber)' },
+                    { text: '⚡ 10Gbps Direct', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.35)', color: 'var(--text-purple)' }
                 ],
                 title: 'Zero-Buffering Stream',
                 meta: ['Real-Debrid', 'AllDebrid', 'Direct Torrent Stream', '4K UHD HDR'],
@@ -9036,7 +9082,7 @@
             },
             {
                 badges: [
-                    { text: '🛡️ DNS Bypass', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', color: '#34d399' },
+                    { text: '🛡️ DNS Bypass', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', color: 'var(--text-success)' },
                     { text: '🔒 Encrypted DoH', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)', color: '#67e8f9' }
                 ],
                 title: 'Encrypted DNS Bypass',
@@ -9051,7 +9097,7 @@
             },
             {
                 badges: [
-                    { text: '🌐 Multi-Language', bg: 'rgba(244, 63, 94, 0.15)', border: 'rgba(244, 63, 94, 0.35)', color: '#fda4af' },
+                    { text: '🌐 Multi-Language', bg: 'rgba(244, 63, 94, 0.15)', border: 'rgba(244, 63, 94, 0.35)', color: 'var(--text-rose)' },
                     { text: '🇯🇵 Anime Dubs', bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.35)', color: '#d8b4fe' }
                 ],
                 title: 'Audio Priority Engine',
@@ -9065,8 +9111,8 @@
             },
             {
                 badges: [
-                    { text: '🔌 50+ Scrapers', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.35)', color: '#93c5fd' },
-                    { text: '📊 Real-Time Health', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', color: '#34d399' }
+                    { text: '🔌 50+ Scrapers', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.35)', color: 'var(--text-blue)' },
+                    { text: '📊 Real-Time Health', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', color: 'var(--text-success)' }
                 ],
                 title: 'Community Repositories',
                 meta: ['Auto-Deduplication', 'Dead Link Shield', 'Live Telemetry', '99.9% Uptime'],
@@ -9557,9 +9603,9 @@
                 badge.style.display = 'inline-flex';
                 badge.style.background = 'rgba(16, 185, 129, 0.12)';
                 badge.style.border = '1px solid rgba(16, 185, 129, 0.35)';
-                badge.style.color = '#34d399';
+                badge.style.color = 'var(--text-success)';
                 const pingHtml = ping ? `<span style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(16, 185, 129, 0.4); padding: 1px 6px; border-radius: 5px; font-weight: 800; font-family: monospace; font-size: 11px; margin-left: 4px;">⚡ ${ping}ms</span>` : '';
-                badge.innerHTML = `<span>🟢</span> <span><b>Active Online Bridge:</b> <code style="color: #a7f3d0; font-family: monospace; font-weight: 700;">${cleanUrl}</code>${pingHtml}</span>`;
+                badge.innerHTML = `<span>🟢</span> <span><b>Active Online Bridge:</b> <code style="color: var(--text-success); font-family: monospace; font-weight: 700;">${cleanUrl}</code>${pingHtml}</span>`;
             } else if (lastStatus === 'offline') {
                 badge.style.display = 'inline-flex';
                 badge.style.background = 'rgba(239, 68, 68, 0.12)';
@@ -9572,7 +9618,7 @@
                 badge.style.background = 'rgba(148, 163, 184, 0.1)';
                 badge.style.border = '1px solid rgba(148, 163, 184, 0.25)';
                 badge.style.color = '#94a3b8';
-                badge.innerHTML = `<span>⚪</span> <span><b>Saved (Untested):</b> <code style="color: #cbd5e1; font-family: monospace; font-weight: 700;">${cleanUrl}</code> — <a href="#" onclick="testTelegramBridge(); return false;" style="color: #38bdf8; text-decoration: underline; font-weight: 600;">Click "Test Daemon" to verify</a></span>`;
+                badge.innerHTML = `<span>⚪</span> <span><b>Saved (Untested):</b> <code style="color: var(--text-muted); font-family: monospace; font-weight: 700;">${cleanUrl}</code> — <a href="#" onclick="testTelegramBridge(); return false;" style="color: #38bdf8; text-decoration: underline; font-weight: 600;">Click "Test Daemon" to verify</a></span>`;
             }
         }
 
@@ -9656,7 +9702,7 @@
                     if (statusEl) {
                         statusEl.style.background = 'rgba(16, 185, 129, 0.12)';
                         statusEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-                        statusEl.style.color = '#34d399';
+                        statusEl.style.color = 'var(--text-success)';
                         const ver = (data.versionData && data.versionData.current_version) ? ` (v${data.versionData.current_version})` : (data.current_version ? ` (v${data.current_version})` : '');
                         const pingBadge = measuredLatency > 0 ? ` <span style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 7px; border-radius: 6px; font-weight: 800; font-family: monospace; font-size: 11px; margin: 0 4px;">⚡ ${measuredLatency}ms ping</span>` : '';
                         statusEl.innerHTML = `🟢 <b>Bridge Online:</b>${pingBadge} High-speed MTProto direct streaming active at <code>${data.bridgeUrl || bridgeUrl}</code>.`;
@@ -9748,7 +9794,7 @@
                         ${getChannelBadge(ch)}
                         <div style="min-width: 0; flex: 1;">
                             <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${ch.name}</div>
-                            <span class="tag-pill-badge" style="font-size: 9.5px; padding: 2px 6px; background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); color: #c4b5fd;">${ch.category} • ${ch.country}</span>
+                            <span class="tag-pill-badge" style="font-size: 9.5px; padding: 2px 6px; background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); color: var(--text-purple);">${ch.category} • ${ch.country}</span>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px;">
@@ -9772,7 +9818,7 @@
                     const match = title.match(/\((\d+ms)\)/);
                     const ping = match ? match[1] : 'OK';
                     btn.innerHTML = `🟢 ${ping}`;
-                    btn.style.color = '#34d399';
+                    btn.style.color = 'var(--text-success)';
                 } else {
                     btn.innerHTML = '⚪ Ready';
                 }
@@ -10002,7 +10048,7 @@
                 statusEl.style.display = 'block';
                 statusEl.style.background = 'rgba(139, 92, 246, 0.12)';
                 statusEl.style.border = '1px solid rgba(139, 92, 246, 0.3)';
-                statusEl.style.color = '#c4b5fd';
+                statusEl.style.color = 'var(--text-purple)';
                 statusEl.innerHTML = '⏳ <b>Fetching and parsing live playlist...</b> Please wait.';
             }
 
@@ -10205,7 +10251,7 @@
             container.innerHTML = cleanCats.map(cat => {
                 const isSel = m3uSelectedCategory.toLowerCase() === cat.toLowerCase();
                 const activeStyle = isSel
-                    ? 'background: rgba(139, 92, 246, 0.22); border-color: var(--accent-primary); color: #ffffff; font-weight: 700; box-shadow: 0 0 14px rgba(139, 92, 246, 0.35);'
+                    ? 'background: rgba(139, 92, 246, 0.22); border-color: var(--accent-primary); color: var(--text-primary); font-weight: 700; box-shadow: 0 0 14px rgba(139, 92, 246, 0.35);'
                     : 'background: rgba(var(--overlay-base), 0.04); border-color: var(--border-subtle); color: var(--text-secondary); font-weight: 600;';
 
                 return `
@@ -10301,7 +10347,7 @@
 
                 // Logo or Aesthetic Gradient Fallback Badge
                 const logoHtml = ch.logo
-                    ? `<img src="${ch.logo}" alt="${cleanName}" style="width: 38px; height: 38px; border-radius: 10px; object-fit: contain; background: rgba(0,0,0,0.25); border: 1px solid rgba(var(--overlay-base),0.08); padding: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(var(--overlay-base),0.18);\'>📡</div>';">`
+                    ? `<img src="${ch.logo}" alt="${cleanName}" style="width: 38px; height: 38px; border-radius: 10px; object-fit: contain; background: var(--bg-input); border: 1px solid rgba(var(--overlay-base),0.08); padding: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(var(--overlay-base),0.18);\'>📡</div>';">`
                     : `<div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(var(--overlay-base),0.18);">📡</div>`;
 
                 return `
@@ -10311,7 +10357,7 @@
                             <div style="min-width: 0; flex: 1;">
                                 <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin-bottom: 3px;" title="${cleanName}">${cleanName}</div>
                                 <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                                    <span class="tag-pill-badge" style="font-size: 9.5px; padding: 1.5px 6px; background: rgba(139, 92, 246, 0.12); border-color: rgba(139, 92, 246, 0.25); color: #c4b5fd;">${catText}</span>
+                                    <span class="tag-pill-badge" style="font-size: 9.5px; padding: 1.5px 6px; background: rgba(139, 92, 246, 0.12); border-color: rgba(139, 92, 246, 0.25); color: var(--text-purple);">${catText}</span>
                                     ${resBadge}
                                 </div>
                             </div>
@@ -10351,7 +10397,7 @@
                 if (data && data.online) {
                     const badge = data.latency < 500 ? `🟢 ${data.latency}ms` : `🟡 ${data.latency}ms`;
                     btn.innerHTML = badge;
-                    btn.style.color = data.latency < 500 ? '#34d399' : '#fbbf24';
+                    btn.style.color = data.latency < 500 ? 'var(--text-success)' : '#fbbf24';
                 } else {
                     btn.innerHTML = '🔴 Offline';
                     btn.style.color = '#f87171';
@@ -10385,7 +10431,7 @@
             }
 
             if (statusEl) {
-                statusEl.style.color = '#c4b5fd';
+                statusEl.style.color = 'var(--text-purple)';
                 statusEl.innerText = '⏳ Connecting to Xtream server...';
             }
 
@@ -10399,7 +10445,7 @@
                 if (data && data.success) {
                     triggerHaptic('success');
                     if (statusEl) {
-                        statusEl.style.color = '#34d399';
+                        statusEl.style.color = 'var(--text-success)';
                         statusEl.innerText = `✅ Connected: ${data.count} Live Streams`;
                     }
                     showToast(`✅ Xtream Connected: ${data.count} channels!`);

@@ -445,14 +445,28 @@ function getAudioScore(stream, preferredLanguages = [], prioritizeHindi = false)
     const langs = (meta.languages || []).map(l => l.toLowerCase());
     const text = [stream.name || '', stream.title || '', stream.description || ''].join(' ').toLowerCase();
 
-    const list = Array.isArray(preferredLanguages) && preferredLanguages.length > 0
-        ? preferredLanguages.map(l => l.toLowerCase())
-        : (prioritizeHindi ? ['hindi', 'dual-audio'] : []);
+    // Portuguese (Brazil) is the default language for this fork.
+    // It boosts PT-BR/PT/Portuguese/Brazilian releases without excluding
+    // original-language releases when no Portuguese stream exists.
+    const defaultPortuguese = ['pt-br', 'portuguese', 'brazilian', 'brazilian portuguese'];
+    const configured = Array.isArray(preferredLanguages) ? preferredLanguages.filter(Boolean) : [];
+    const list = configured.length > 0
+        ? configured.map(l => l.toLowerCase())
+        : (prioritizeHindi ? ['hindi', 'dual-audio'] : defaultPortuguese);
 
     if (list.length === 0) return 0;
 
     let score = 0;
     let matchedSpecific = false;
+
+    const portugueseAliases = new Set(['pt-br', 'ptbr', 'pt', 'portuguese', 'brazilian', 'brazilian portuguese', 'português', 'portugues', 'brasileiro', 'br']);
+    const hasPortuguese = langs.some(l => portugueseAliases.has(l))
+        || /(?:\bpt[- ]?br\b|\bportugu(?:ese|ês)\b|\bbrazilian(?:\s+portuguese)?\b|\bportuguês\s+brasileiro\b)/i.test(text);
+    if (hasPortuguese) score += 850;
+
+    // Explicit Portuguese preference gets an additional strong boost.
+    const explicitPortuguese = list.some(pref => portugueseAliases.has(pref));
+    if (explicitPortuguese && hasPortuguese) score += 500;
 
     list.forEach((pref, index) => {
         const isGenericTag = (pref === 'dual-audio' || pref === 'multi-audio');

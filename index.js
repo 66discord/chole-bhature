@@ -2044,7 +2044,7 @@ function createAddon(config) {
                 sortMode: config.sortMode || config.sortBy,
                 prioritizeQuality: config.sortBy === 'quality' || config.prioritizeQuality,
                 prioritizeHindi: config.prioritizeHindi,
-                preferredLanguages: config.preferredLanguages || (config.prioritizeHindi ? ['Hindi', 'Dual-Audio'] : []),
+                preferredLanguages: config.preferredLanguages || (config.prioritizeHindi ? ['Hindi', 'Dual-Audio'] : ['pt-BR', 'Portuguese', 'Brazilian']),
                 showSeeders: config.showSeeders !== false,
                 deduplicateStreams: config.deduplicateStreams !== false,
                 cleanTitles: config.cleanTitles !== false,

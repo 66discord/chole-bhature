@@ -100,14 +100,15 @@
         }
 
         body.theme-light .pill-btn-glass {
-            background: rgba(255, 255, 255, 0.65);
-            border-color: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-            color: #1e293b;
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            color: #0f172a;
         }
 
         body.theme-light .pill-btn-glass:hover {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.18);
         }
 
         /* AMOLED Black Theme */
@@ -571,6 +572,34 @@
             box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
             font-weight: 700;
         }
+
+        .pill-btn-dark-rocket {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            font-weight: 700;
+        }
+        .pill-btn-dark-rocket:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .install-light-content { display: none !important; }
+        .install-dark-content { display: inline-flex !important; align-items: center; gap: 4px; }
+
+        body.theme-light #install-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+            box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35) !important;
+            border: none !important;
+            color: #ffffff !important;
+        }
+        body.theme-light #install-btn:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45) !important;
+        }
+        body.theme-light .install-light-content { display: inline-flex !important; align-items: center; gap: 4px; }
+        body.theme-light .install-dark-content { display: none !important; }
 
         .pill-btn-theme:hover {
             transform: translateY(-1px) scale(1.02);
@@ -2715,6 +2744,8 @@
                 box-shadow: none;
             }
 
+
+
             /* Save & Install as compact text pills on mobile */
             #save-btn,
             #install-btn {
@@ -2991,40 +3022,36 @@
         <div class="nav-actions-pill">
             <div class="nav-actions-icons">
                 <button class="pill-btn pill-btn-icon-only"
-                    onclick="window.open('https://github.com/SA7ANI/chole-bhature', '_blank')" title="View on GitHub"
-                    id="github-btn">
-                    <span id="github-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                        </svg></span>
+                    onclick="window.open('https://t.me/cholebhature_chat', '_blank')" title="Join Telegram"
+                    id="telegram-btn" style="display: inline-flex; align-items: center; justify-content: center;">
+                    <span id="telegram-icon" style="display:flex; align-items:center; justify-content: center; width: 100%; height: 100%;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#2AABEE"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.42531 11.8726L17.759 7.10893C18.3297 6.90299 18.8285 7.2476 18.6366 7.9405L16.5414 17.8105C16.3861 18.5292 15.9529 18.708 15.352 18.3713L12.0658 15.9515L10.4812 17.4764C10.306 17.6516 10.1601 17.7975 9.79979 17.7975L10.0334 14.4328L16.1557 8.90396C16.4221 8.66675 16.0975 8.53488 15.7431 8.77198L8.17112 13.5356L4.91264 12.5161C4.20459 12.2943 4.19163 11.8089 5.06015 11.4682" fill="white"/>
+                        </svg>
+                    </span>
                 </button>
 
-                <button class="pill-btn pill-btn-icon-only" onclick="toggleTheme()" title="Toggle Theme" id="theme-btn">
-                    <span id="theme-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                        </svg></span>
+                <button class="pill-btn pill-btn-icon-only" onclick="toggleTheme()" title="Toggle Theme" id="theme-btn" style="display: inline-flex; align-items: center; justify-content: center;">
+                    <span id="theme-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><span style="display:flex; align-items:center; justify-content:center; font-size:18px; line-height:normal; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; transform: translateY(-1px);">🌙&#xFE0F;</span></span>
                 </button>
             </div>
             <div class="nav-actions-buttons">
                 <button class="pill-btn pill-btn-glass" id="save-btn" onclick="handleSaveAction()"
                     title="Save & sync changes to cloud">
-                    <span id="save-btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                            <polyline points="17 21 17 13 7 13 7 21" />
-                            <polyline points="7 3 7 8 15 8" />
-                        </svg></span>
-                    <span class="btn-save-text" id="save-btn-text" style="display: inline-block;">Save</span>
+                    <span id="save-btn-icon" style="display: inline-flex; align-items: center; justify-content: center;"><span style="display:inline-flex; align-items:center; justify-content:center; font-size:14px; line-height:normal; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; transform: translateY(-1px);">💾&#xFE0F;</span></span>
+                    <span class="btn-save-text" id="save-btn-text" style="display: inline-flex; align-items: center;">Save</span>
                 </button>
-                <button class="pill-btn pill-btn-theme" id="install-btn" onclick="handleInstallAction()"
+                <button class="pill-btn pill-btn-dark-rocket" id="install-btn" onclick="handleInstallAction()"
                     title="Install Addon to Stremio / Nuvio">
-                    <span id="install-btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m13 2-2 2.5V8l-3 3 5 5 3-3h3.5L22 11l-9-9Z" />
-                            <path d="m4.5 15.5-1.5 4 4-1.5" />
-                        </svg></span>
-                    <span class="btn-save-text" id="install-btn-text" style="display: inline-block;">Install</span>
+                    <span class="install-light-content">
+                        <span style="display:inline-flex; align-items:center; justify-content:center; font-size:14px; line-height:normal; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; transform: translateY(-1px);">🚀&#xFE0F;</span>
+                        <span class="btn-save-text">Install</span>
+                    </span>
+                    <span class="install-dark-content">
+                        <span style="display:inline-flex; align-items:center; justify-content:center; font-size:14px; line-height:normal; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; transform: translateY(-1px);">🚀&#xFE0F;</span>
+                        <span class="btn-save-text">Install</span>
+                    </span>
                 </button>
             </div>
         </div>
@@ -8804,9 +8831,9 @@
         // Theme System (Glass Dark 🌙 ⟷ Pure AMOLED Black 🌑 ⟷ Light ☀️)
         const themes = ['glass', 'amoled', 'light'];
         const themeSVGs = {
-            'glass': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
-            'amoled': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20z"/></svg>',
-            'light': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
+            'glass': '<span style="display:flex; align-items:center; justify-content:center; font-size:18px; line-height:normal; font-family: \'Apple Color Emoji\', \'Segoe UI Emoji\', \'Noto Color Emoji\', sans-serif; transform: translateY(-1px);">🌙&#xFE0F;</span>',
+            'amoled': '<span style="display:flex; align-items:center; justify-content:center; font-size:18px; line-height:normal; font-family: \'Apple Color Emoji\', \'Segoe UI Emoji\', \'Noto Color Emoji\', sans-serif; transform: translateY(-1px);">🌑&#xFE0F;</span>',
+            'light': '<span style="display:flex; align-items:center; justify-content:center; font-size:18px; line-height:normal; font-family: \'Apple Color Emoji\', \'Segoe UI Emoji\', \'Noto Color Emoji\', sans-serif; transform: translateY(-1px);">☀️&#xFE0F;</span>'
         };
         let currentTheme = localStorage.getItem('nuvio_theme') || 'glass';
         if (!themes.includes(currentTheme)) currentTheme = 'glass';

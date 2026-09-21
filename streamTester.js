@@ -633,7 +633,7 @@ async function testStream(stream, showSeeders = true, config = {}) {
 
     // Fast Eco Mode for Vercel Free-Tier (Zero-Blocking CPU / Instant Heuristics < 5ms)
     // Disabled by default; only active if explicitly enabled in user config
-    const isEcoMode = Boolean(config.vercelEcoMode === true || config.renderEcoMode === true);
+    const isEcoMode = Boolean(config.ecoMode === true || config.vercelEcoMode === true || config.renderEcoMode === true);
     if (isEcoMode) {
         let heuristicLatency = 120;
         let isDead = false;

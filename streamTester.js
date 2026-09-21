@@ -1109,9 +1109,16 @@ async function sortAndTagStreams(streams, config = {}, providerAnalytics) {
         }
     }
 
+    // Fast-start mode can cap network probes. The complete pass is still used
+    // by background refreshes, so this only affects time-to-first-stream.
+    const maxStreamsToTest = Number.isFinite(Number(config?.maxStreamsToTest))
+        ? Math.max(1, Number(config.maxStreamsToTest))
+        : uniqueStreams.length;
+    const streamsToTest = uniqueStreams.slice(0, maxStreamsToTest);
+
     // Run tests concurrently
     const testedStreams = await Promise.all(
-        uniqueStreams.map(stream => testStream(stream, showSeeders, config))
+        streamsToTest.map(stream => testStream(stream, showSeeders, config))
     );
 
     // Record Analytics

@@ -9,6 +9,7 @@
   [![Platform](https://img.shields.io/badge/Platform-Nuvio%20%7C%20Stremio-purple.svg?style=for-the-badge)](https://github.com/SA7ANI/chole-bhature)
   [![License](https://img.shields.io/badge/License-GNU%20AGPLv3-amber.svg?style=for-the-badge)](LICENSE)
   [![Author](https://img.shields.io/badge/Author-SA7ANI-blue.svg?style=for-the-badge)](https://github.com/SA7ANI)
+  [![Telegram](https://img.shields.io/badge/Telegram-Chat-0088cc.svg?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/cholebhature_chat)
 
   <br><br>
 
@@ -117,6 +118,14 @@ Under the **Diagnostics & Admin** tab, you can monitor and manage your deploymen
 * **Scraper Engine:** Axios, Cheerio, Crypto-JS, Node-Fetch
 * **DNS Resolver:** DNS-over-HTTPS (DoH) via Axios with Native DNS fallback
 * **Frontend:** Vanilla HTML5, Modern CSS3 Glassmorphism, Offline PWA Service Worker
+
+---
+
+## 💬 Join the Community
+
+Connect with other users, get support, report bugs, request new features, and stay updated on the latest Chole Bhature developments by joining our official Telegram group!
+
+👉 **[Join the Chole Bhature Telegram Chat](https://t.me/cholebhature_chat)**
 
 ---
 

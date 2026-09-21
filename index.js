@@ -410,7 +410,7 @@ const backgroundStreamRefreshes = new Map();
 // - FAST_PROVIDER_LIMIT keeps the first response small and quick.
 // - Background refresh then fans out to every provider and replaces the partial cache.
 // - HTTP cache headers let Nuvio/Stremio reuse a recent response without another scrape.
-const FAST_PROVIDER_LIMIT = Number(process.env.FAST_PROVIDER_LIMIT || 8);
+const FAST_PROVIDER_LIMIT = Math.max(1, Number.parseInt(process.env.FAST_PROVIDER_LIMIT || '8', 10) || 8);
 const STREAM_CACHE_MAX_AGE = Number(process.env.STREAM_CACHE_MAX_AGE || 120);
 const STREAM_STALE_REVALIDATE = Number(process.env.STREAM_STALE_REVALIDATE || 900);
 const STREAM_STALE_ERROR = Number(process.env.STREAM_STALE_ERROR || 3600);
@@ -1959,8 +1959,9 @@ function createAddon(config) {
                 ? Boolean(globalServerSettings.globalEcoMode)
                 : (globalServerSettings.allowClientEcoOverride ? Boolean(isClientEco !== false) : true);
             const PROVIDER_TIMEOUT_MS = isEcoMode || (typeof process !== 'undefined' && (process.env.RENDER || process.env.VERCEL)) ? 8000 : 15000;
+            const ACTIVE_PROVIDER_TIMEOUT_MS = fastMode ? Math.min(PROVIDER_TIMEOUT_MS, 3500) : PROVIDER_TIMEOUT_MS;
 
-            const tgScrapePromise = (async () => {
+            const tgScrapePromise = (!fastMode && Boolean(config.enableTelegram)) ? (async () => {
                 if (Boolean(config.enableTelegram) && (!config.disabled || (!config.disabled.includes('Telegram') && !config.disabled.includes('Telegram (PencariMovie)')))) {
                     try {
                         const tgStreams = await searchPencariMovie({
@@ -1978,7 +1979,7 @@ function createAddon(config) {
                         console.warn('[Telegram Scraper] Error fetching streams:', tgErr.message);
                     }
                 }
-            })();
+            })() : Promise.resolve();
 
             const providersToQuery = fastMode
                 ? allProviders.slice(0, Math.max(1, FAST_PROVIDER_LIMIT))
@@ -2005,7 +2006,7 @@ function createAddon(config) {
                         
                         // Timeout promise
                         const timeoutPromise = new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Scrape Timeout')), PROVIDER_TIMEOUT_MS)
+                            setTimeout(() => reject(new Error('Scrape Timeout')), ACTIVE_PROVIDER_TIMEOUT_MS)
                         );
 
                         const streams = await Promise.race([scrapePromise, timeoutPromise]);

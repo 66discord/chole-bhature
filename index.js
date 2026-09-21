@@ -404,6 +404,16 @@ app.get('/:configJSON/configure', (req, res) => {
 
 const streamCache = new Map();
 const inFlightStreamFetches = new Map();
+const backgroundStreamRefreshes = new Map();
+
+// Performance profile:
+// - FAST_PROVIDER_LIMIT keeps the first response small and quick.
+// - Background refresh then fans out to every provider and replaces the partial cache.
+// - HTTP cache headers let Nuvio/Stremio reuse a recent response without another scrape.
+const FAST_PROVIDER_LIMIT = Number(process.env.FAST_PROVIDER_LIMIT || 8);
+const STREAM_CACHE_MAX_AGE = Number(process.env.STREAM_CACHE_MAX_AGE || 120);
+const STREAM_STALE_REVALIDATE = Number(process.env.STREAM_STALE_REVALIDATE || 900);
+const STREAM_STALE_ERROR = Number(process.env.STREAM_STALE_ERROR || 3600);
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 
@@ -1844,7 +1854,7 @@ function createAddon(config) {
 
     const builder = new addonBuilder({
         id: addonId,
-        version: '4.4.0',
+        version: '5.0.0',
         name: addonName,
         description: 'High-Performance Stream Meta-Sorter & Discovery Hub for Nuvio & Stremio. Scrapes, verifies, filters dead links, organizes streams by speed/quality/audio, and provides curated Live TV, Indian Cinema, Trending & Anime feeds.',
         logo: addonLogo,
@@ -1885,7 +1895,7 @@ function createAddon(config) {
         const FRESH_TTL_MS = 15 * 60 * 1000; // 15 minutes
         const STALE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-        const fetchAndCacheStreams = async () => {
+        const fetchAndCacheStreams = async ({ fastMode = false } = {}) => {
             let imdbId = id;
             let season = null;
             let episode = null;
@@ -1970,9 +1980,13 @@ function createAddon(config) {
                 }
             })();
 
+            const providersToQuery = fastMode
+                ? allProviders.slice(0, Math.max(1, FAST_PROVIDER_LIMIT))
+                : allProviders;
+
             await Promise.all([
                 tgScrapePromise,
-                ...allProviders.map(async (provider) => {
+                ...providersToQuery.map(async (provider) => {
                     try {
                         if (config.enableQuarantine !== false) {
                             const qRecord = quarantineRegistry.get(provider.name);
@@ -2093,7 +2107,12 @@ function createAddon(config) {
             }
             
             const frStream = getForceRefreshStream();
-            return { streams: frStream ? [frStream, ...cached.streams] : cached.streams };
+            return {
+                streams: frStream ? [frStream, ...cached.streams] : cached.streams,
+                cacheMaxAge: STREAM_CACHE_MAX_AGE,
+                staleRevalidate: STREAM_STALE_REVALIDATE,
+                staleError: STREAM_STALE_ERROR
+            };
         }
 
         // Deduplicate in-flight requests for the exact same stream
@@ -2104,12 +2123,30 @@ function createAddon(config) {
             return { streams: frStream ? [frStream, ...inFlightResult] : inFlightResult };
         }
 
-        const fetchPromise = fetchAndCacheStreams();
+        // First request: use a deliberately small provider fan-out so the client
+        // receives playable candidates quickly. The complete provider sweep continues
+        // in the background and replaces the cache when it finishes.
+        const fetchPromise = fetchAndCacheStreams({ fastMode: true });
         inFlightStreamFetches.set(cacheKey, fetchPromise);
         try {
             const sortedAndTaggedStreams = await fetchPromise;
+
+            // Do not make the user wait for the deep provider sweep.
+            // Only one background refresh is allowed for a cache key at a time.
+            if (!backgroundStreamRefreshes.has(cacheKey)) {
+                const refreshPromise = fetchAndCacheStreams({ fastMode: false })
+                    .catch(e => console.error('[Background Full Refresh Error]', e))
+                    .finally(() => backgroundStreamRefreshes.delete(cacheKey));
+                backgroundStreamRefreshes.set(cacheKey, refreshPromise);
+            }
+
             const frStream = getForceRefreshStream();
-            return { streams: frStream ? [frStream, ...sortedAndTaggedStreams] : sortedAndTaggedStreams };
+            return {
+                streams: frStream ? [frStream, ...sortedAndTaggedStreams] : sortedAndTaggedStreams,
+                cacheMaxAge: STREAM_CACHE_MAX_AGE,
+                staleRevalidate: STREAM_STALE_REVALIDATE,
+                staleError: STREAM_STALE_ERROR
+            };
         } catch (streamErr) {
             console.error(`[Stremio Stream Handler Error] for ${type} ${id}:`, streamErr.stack || streamErr.message);
             return { streams: [] };

@@ -2031,8 +2031,7 @@ function createAddon(config) {
                         }
                         console.error(`[Provider] ${provider.name} failed or timed out:`, err.message);
                     }
-                }),
-                tgScrapePromise
+                })
             ]);
             const scrapeDurationMs = Date.now() - scrapeStartTime;
 
@@ -2068,6 +2067,7 @@ function createAddon(config) {
                 includeOriginalTitle: config.includeOriginalTitle !== false,
                 renderEcoMode: isEcoMode,
                 vercelEcoMode: isEcoMode,
+                maxStreamsToTest: fastMode ? 24 : undefined,
                 debridProvider: config.debridProvider,
                 debridApiKey: config.debridApiKey,
                 addonHost: config.addonHost,
